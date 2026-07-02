@@ -64,25 +64,31 @@ button{cursor:pointer;}
 .body-intro{text-align:center;margin-bottom:6px;}
 .body-intro h2{font-size:16px;color:var(--navy);margin-bottom:4px;}
 .body-intro p{font-size:12.5px;color:var(--text-2);line-height:1.5;max-width:320px;margin:0 auto;}
-.body-wrap{display:flex;justify-content:center;padding:14px 0 6px;}
-.body-wrap svg{width:100%;max-width:260px;height:auto;}
+.body-wrap{display:flex;justify-content:center;padding:10px 0 6px;}
+.body-wrap svg{width:100%;max-width:280px;height:auto;}
+.body-figure{fill:#E4E9F1;stroke:var(--navy);stroke-width:2.5;stroke-linejoin:round;}
+.body-limb{stroke:var(--navy-light);stroke-linecap:round;fill:none;opacity:.9;}
 .hotspot{cursor:pointer;}
-.hotspot circle{transition:r .12s;}
+.hotspot circle.dot{transition:r .12s,fill .12s;stroke:#fff;stroke-width:2.5;}
+.hotspot circle.pulse{fill:none;stroke:var(--orange);stroke-width:2;opacity:0;}
 .hotspot.active circle.dot{fill:var(--orange);}
-.hotspot.active:active circle.dot{r:11;}
+.hotspot.active circle.pulse{animation:pulseRing 2.2s ease-out infinite;}
+.hotspot.active:active circle.dot{r:12;}
 .hotspot.locked circle.dot{fill:#C7CCD6;}
-.hotspot text{font-size:8px;font-weight:700;fill:var(--navy);text-anchor:middle;font-family:Inter,sans-serif;}
-.hotspot.locked text{fill:var(--text-3);}
-.zonas-legend{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin-top:6px;}
-.legend-chip{font-size:10.5px;padding:4px 9px;border-radius:20px;font-weight:600;}
+@keyframes pulseRing{0%{r:9;opacity:.55;}100%{r:18;opacity:0;}}
+.zonas-legend{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin-top:10px;}
+.legend-chip{font-size:10.5px;padding:5px 10px;border-radius:20px;font-weight:600;}
 .legend-chip.active{background:var(--orange-light);color:var(--orange);}
 .legend-chip.locked{background:var(--surface);color:var(--text-3);border:1px solid var(--border);}
 
 /* ── VISTA ZONA ── */
 .zona-header{margin-bottom:14px;}
 .zona-header h2{font-size:18px;color:var(--navy);}
-.zona-search{width:100%;border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 12px;font-size:13px;outline:none;margin:10px 0 14px;background:var(--surface);}
+.zona-search{width:100%;border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 12px;font-size:13px;outline:none;margin:10px 0 10px;background:var(--surface);}
 .zona-search:focus{border-color:var(--navy);background:#fff;}
+.view-toggle{display:flex;background:var(--surface);border:1px solid var(--border);border-radius:30px;padding:3px;margin-bottom:12px;}
+.view-toggle button{flex:1;border:none;background:transparent;padding:8px 6px;font-size:12.5px;font-weight:600;color:var(--text-2);border-radius:24px;font-family:Inter,sans-serif;}
+.view-toggle button.on{background:var(--navy);color:#fff;}
 .btn-add-lesion{display:flex;align-items:center;justify-content:center;gap:6px;width:100%;padding:11px;background:var(--orange);color:#fff;border:none;border-radius:var(--radius-sm);font-size:13px;font-weight:600;margin-bottom:14px;}
 .lesion-list{display:flex;flex-direction:column;gap:10px;}
 .lesion-card{border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;background:var(--bg);}
@@ -107,6 +113,17 @@ button{cursor:pointer;}
 .lesion-actions{display:flex;justify-content:flex-end;margin-top:6px;}
 .btn-del-lesion{padding:7px 12px;background:transparent;border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text-3);font-size:12px;font-family:Inter,sans-serif;}
 .empty-zona{text-align:center;padding:40px 20px;color:var(--text-3);font-size:13px;}
+.resumen-text{font-size:12.5px;color:var(--text-2);line-height:1.5;padding:0 14px 10px;margin-top:-4px;}
+.lesion-card.open .resumen-text{display:none;}
+.phase-item{display:flex;gap:10px;border:1px solid var(--border);border-radius:var(--radius-sm);padding:9px 10px;margin-bottom:7px;background:var(--surface);position:relative;}
+.phase-time{flex-shrink:0;width:64px;}
+.phase-time input{width:100%;border:none;background:var(--blue-chip-light);color:var(--blue-chip);font-size:11px;font-weight:700;border-radius:6px;padding:5px 6px;text-align:center;outline:none;font-family:Inter,sans-serif;}
+.phase-body{flex:1;min-width:0;}
+.phase-body input.si-title{width:calc(100% - 20px);margin-bottom:4px;}
+.phase-body textarea.si-body{width:100%;}
+.lesion-list.compact .full-only{display:none;}
+.lesion-list.compact .lesion-body{padding-bottom:10px;}
+@supports(padding:max(0px)){.panel{padding-bottom:max(40px,env(safe-area-inset-bottom));}}
 
 /* ── TOAST ── */
 .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--navy);color:#fff;padding:10px 18px;border-radius:30px;font-size:13px;font-weight:500;opacity:0;transition:.25s;z-index:200;pointer-events:none;box-shadow:var(--shadow-lg);}
@@ -145,6 +162,7 @@ let DATA = { zonas: {} };
 let currentZona = null;
 let openLesionIds = new Set();
 let autoSaveTimer = null;
+let viewMode = 'full'; // 'full' | 'compact'
 
 function uid(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,7); }
 function esc(s){ return (s==null?'':String(s)).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
@@ -170,22 +188,20 @@ function checkGate(){
 }
 
 // ══════════════════ ZONAS DEL CUERPO ══════════════════
-// "active" = zona con contenido cargado y funcional. El resto queda bloqueada
-// hasta que sumemos más zonas (arrancamos piloto con rodilla).
 const ZONAS = [
-  {id:'cuello',    label:'Cuello',        active:false, x:150, y:82},
-  {id:'hombro',    label:'Hombro',        active:false, x:100, y:112},
-  {id:'hombro',    label:'Hombro',        active:false, x:200, y:112},
-  {id:'columna',   label:'Columna',       active:false, x:150, y:150},
-  {id:'codo',      label:'Codo',          active:false, x:76,  y:188},
-  {id:'codo',      label:'Codo',          active:false, x:224, y:188},
-  {id:'cadera',    label:'Cadera',        active:false, x:150, y:238},
-  {id:'muneca',    label:'Muñeca / Mano', active:false, x:58,  y:262},
-  {id:'muneca',    label:'Muñeca / Mano', active:false, x:242, y:262},
-  {id:'rodilla',   label:'Rodilla',       active:true,  x:126, y:370},
-  {id:'rodilla',   label:'Rodilla',       active:true,  x:174, y:370},
-  {id:'tobillo',   label:'Tobillo / Pie', active:false, x:122, y:470},
-  {id:'tobillo',   label:'Tobillo / Pie', active:false, x:178, y:470},
+  {id:'cuello',    label:'Cuello',        active:true, x:150, y:80},
+  {id:'hombro',    label:'Hombro',        active:true, x:100, y:112},
+  {id:'hombro',    label:'Hombro',        active:true, x:200, y:112},
+  {id:'columna',   label:'Columna',       active:true, x:150, y:165},
+  {id:'codo',      label:'Codo',          active:true, x:65,  y:196},
+  {id:'codo',      label:'Codo',          active:true, x:235, y:196},
+  {id:'cadera',    label:'Cadera',        active:true, x:150, y:248},
+  {id:'muneca',    label:'Muñeca / Mano', active:true, x:58,  y:276},
+  {id:'muneca',    label:'Muñeca / Mano', active:true, x:242, y:276},
+  {id:'rodilla',   label:'Rodilla',       active:true, x:122, y:396},
+  {id:'rodilla',   label:'Rodilla',       active:true, x:178, y:396},
+  {id:'tobillo',   label:'Tobillo / Pie', active:true, x:118, y:512},
+  {id:'tobillo',   label:'Tobillo / Pie', active:true, x:182, y:512},
 ];
 const ZONA_LABELS = {};
 ZONAS.forEach(z=>ZONA_LABELS[z.id]=z.label);
@@ -200,6 +216,7 @@ function initApp(){
     } else {
       DATA = val;
       if(!DATA.zonas) DATA.zonas = {};
+      migrateNewZonas();
     }
     render();
   }, err=>{
@@ -214,42 +231,243 @@ function initApp(){
   });
 }
 
-// Base de arranque para la zona piloto (Rodilla) — 4 lesiones frecuentes como
-// ejemplo de formato. Están pensadas para editar/expandir, no como texto final.
+// Suma zonas nuevas del seed que todavía no existan en la base (no pisa nada
+// que ya esté cargado/editado). Se corre cada vez que se abre la app.
+function migrateNewZonas(){
+  const defaults=seedDefaultData();
+  let changed=false;
+  Object.keys(defaults.zonas).forEach(zid=>{
+    if(!DATA.zonas[zid]){ DATA.zonas[zid]=defaults.zonas[zid]; changed=true; }
+  });
+  if(changed) saveDB();
+}
+
+// Base de arranque con contenido para todas las zonas — pensada como punto de
+// partida (formato + ejemplos con literatura estándar) para editar/expandir.
 function seedDefaultData(){
-  const mk=(nombre,descripcion,estadisticas,evaluacion)=>({
-    id:uid(), nombre, descripcion, estadisticas,
+  const mk=(nombre,resumen,descripcion,estadisticas,evaluacion,evolucion,protocolos)=>({
+    id:uid(), nombre, resumen, descripcion, estadisticas,
     evaluacion:evaluacion.map(e=>({nombre:e[0],detalle:e[1]})),
+    evolucion:evolucion.map(e=>({fase:e[0],tiempo:e[1],descripcion:e[2]})),
+    protocolos:protocolos.map(p=>({nombre:p[0],contenido:p[1]})),
     experiencias:[], papers:[]
   });
-  return {
-    zonas:{
-      rodilla:{
-        lesiones:[
-          mk('Lesión de LCA (ligamento cruzado anterior)',
-            'Rotura total o parcial del LCA, típicamente por mecanismo de pivote/desaceleración sin contacto (valgo + rotación externa de tibia). Frecuente en deportes con cambios de dirección.',
-            'Una de las lesiones ligamentarias más estudiadas de rodilla; mayor incidencia en deportes de pivoteo y en mujeres vs. hombres en el mismo deporte. RTP habitual 9-12 meses post reconstrucción.',
-            [['Lachman','Rodilla en 20-30° flexión, se tracciona la tibia hacia anterior estabilizando el fémur. Positivo: desplazamiento aumentado sin punto final firme (end-point blando).'],
-             ['Pivot shift','Con la rodilla en extensión se aplica valgo + rotación interna y se flexiona progresivamente. Positivo: reducción brusca (clunk) alrededor de 20-30°, indica inestabilidad rotacional.']]),
-          mk('Lesión meniscal',
-            'Rotura del menisco medial o lateral, de causa traumática (torsión con pie fijo) o degenerativa. Puede asociarse a lesión de LCA.',
-            'El menisco medial se lesiona con más frecuencia que el lateral en mecanismos traumáticos; en mayores de 40 años predominan las roturas degenerativas.',
-            [['McMurray','Flexión máxima de rodilla, rotación de tibia (interna/externa) mientras se extiende. Positivo: click o dolor en la interlínea articular.'],
-             ['Thessaly','Apoyo monopodal en 20° de flexión con rotación del tronco/rodilla. Positivo: dolor en interlínea o sensación de bloqueo.']]),
-          mk('Tendinopatía rotuliana',
-            '"Rodilla del saltador". Sobrecarga del tendón rotuliano (habitualmente polo inferior de rótula) por sobreuso en deportes de salto/aceleración-desaceleración.',
-            'Muy prevalente en voley y básquet; el dolor localizado y la carga acumulada (volumen de saltos) son los principales factores asociados.',
-            [['Palpación polo inferior de rótula','Dolor focal reproducible a la palpación directa del polo inferior con rodilla en extensión.'],
-             ['Single leg decline squat','Sentadilla monopodal en plano declinado 25°. Reproduce dolor típico y permite graduar severidad (VISA-P complementa la evaluación).']]),
-          mk('Síndrome femoropatelar (dolor anterior de rodilla)',
-            'Dolor difuso anterior/retropatelar relacionado a alteración del tracking patelar, sobrecarga o déficit de control neuromuscular de cadera/rodilla. Diagnóstico de exclusión.',
-            'Una de las causas más frecuentes de consulta por dolor de rodilla en corredores y deportistas jóvenes; alta tasa de recurrencia si no se aborda el control motor proximal.',
-            [['Clarke / grinding test','Compresión de rótula contra tróclea mientras el paciente contrae cuádriceps. Positivo: dolor retropatelar (test poco específico, usar en conjunto con otros).'],
-             ['Step-down test','Descenso controlado de un escalón. Evalúa control de valgo dinámico de rodilla y reproduce el dolor funcional.']])
-        ]
-      }
-    }
-  };
+
+  return { zonas: {
+    rodilla:{ lesiones:[
+      mk('Lesión de LCA (ligamento cruzado anterior)',
+        'Rotura del LCA por mecanismo de pivote/desaceleración sin contacto. RTP típico 9-12 meses post reconstrucción.',
+        'Rotura total o parcial del LCA, típicamente por valgo + rotación externa de tibia con pie fijo. Frecuente en deportes con cambios de dirección.',
+        'Mayor incidencia en deportes de pivoteo; mayor riesgo relativo en mujeres vs. hombres en el mismo deporte. Alta tasa de re-rotura en <18 años que vuelven antes de los 9 meses.',
+        [['Lachman','Rodilla en 20-30° flexión, se tracciona la tibia hacia anterior estabilizando el fémur. Positivo: desplazamiento aumentado sin punto final firme.'],
+         ['Pivot shift','Valgo + rotación interna en extensión, se flexiona progresivamente. Positivo: reducción brusca (clunk) ~20-30°, indica inestabilidad rotacional.']],
+        [['Fase 1 · Control inicial','0-2 sem','Control de dolor/derrame, extensión completa, activación de cuádriceps, marcha sin claudicación.'],
+         ['Fase 2 · Fuerza y ROM','2-12 sem','ROM completo, fortalecimiento cadena cerrada progresivo, propiocepción básica.'],
+         ['Fase 3 · Readaptación','3-6 meses','LSI de fuerza >80%, inicio de carrera y pliometría progresiva.'],
+         ['Fase 4 · Return to sport','9-12 meses','LSI ≥90% en tests funcionales, batería de saltos y readiness psicológica (ACL-RSI) antes del alta.']],
+        [['Fortalecimiento de cuádriceps en cadena cerrada','Sentadilla, prensa y step-up progresivos priorizando control de valgo dinámico y carga simétrica entre miembros.']]),
+      mk('Lesión meniscal',
+        'Rotura de menisco medial o lateral, traumática o degenerativa. Puede asociarse a lesión de LCA.',
+        'Rotura del menisco medial o lateral por torsión con pie fijo (traumática) o por desgaste (degenerativa, >40 años).',
+        'El menisco medial se lesiona con más frecuencia que el lateral en mecanismos traumáticos; en mayores de 40 predominan las roturas degenerativas.',
+        [['McMurray','Flexión máxima, rotación de tibia mientras se extiende. Positivo: click o dolor en la interlínea articular.'],
+         ['Thessaly','Apoyo monopodal en 20° de flexión con rotación del tronco. Positivo: dolor en interlínea o bloqueo.']],
+        [['Fase 1 · Post-quirúrgica/conservadora','0-3 sem','Control de derrame, ROM progresivo según tipo de reparación (meniscectomía vs. sutura).'],
+         ['Fase 2 · Fortalecimiento','3-8 sem','Fortalecimiento progresivo en cadena cerrada, propiocepción.'],
+         ['Fase 3 · RTP','2-4 meses (meniscectomía) / 4-6 meses (sutura)','Criterios funcionales y LSI antes del alta deportiva.']],
+        [['Progresión de carga post-meniscectomía parcial','Carga completa temprana si tolera, fortalecimiento de cuádriceps desde el día 1, sin restricción de ROM.']]),
+      mk('Tendinopatía rotuliana',
+        '"Rodilla del saltador". Sobrecarga del tendón rotuliano por sobreuso en deportes de salto.',
+        'Sobrecarga del tendón rotuliano (habitualmente polo inferior de rótula) por acumulación de carga en deportes de salto/aceleración-desaceleración.',
+        'Muy prevalente en voley y básquet; el dolor localizado y el volumen de saltos acumulado son los principales factores asociados.',
+        [['Palpación polo inferior de rótula','Dolor focal reproducible a la palpación directa con rodilla en extensión.'],
+         ['Single leg decline squat','Sentadilla monopodal en plano declinado 25°. Reproduce el dolor típico y gradúa severidad (complementar con VISA-P).']],
+        [['Fase 1 · Isométricos','0-2 sem','Isometría en rangos de dolor tolerable para analgesia y mantenimiento de capacidad de carga.'],
+         ['Fase 2 · Isotónicos','2-6 sem','Fortalecimiento isotónico pesado y lento (heavy slow resistance), monitoreo de dolor 24hs post.'],
+         ['Fase 3 · Almacenamiento de energía','6-12 sem','Introducción de pliometría progresiva y gestos específicos del deporte.']],
+        [['Carga progresiva (isométrico → isotónico → pliometría)','Seguir el modelo de continuum de tendinopatía: isometría para dolor agudo, luego HSR, luego pliometría según tolerancia.']]),
+      mk('Síndrome femoropatelar',
+        'Dolor difuso anterior de rodilla por alteración del tracking patelar o déficit de control proximal. Diagnóstico de exclusión.',
+        'Dolor difuso anterior/retropatelar relacionado a alteración del tracking patelar, sobrecarga o déficit de control neuromuscular de cadera/rodilla.',
+        'Una de las causas más frecuentes de dolor de rodilla en corredores y deportistas jóvenes; alta recurrencia si no se aborda el control motor proximal.',
+        [['Clarke / grinding test','Compresión de rótula contra tróclea con contracción de cuádriceps. Positivo: dolor retropatelar (poco específico, usar junto a otros).'],
+         ['Step-down test','Descenso controlado de un escalón. Evalúa control de valgo dinámico y reproduce el dolor funcional.']],
+        [['Fase 1 · Control de síntomas','0-2 sem','Modificación de carga, control de dolor, activación de glúteo medio.'],
+         ['Fase 2 · Fuerza proximal','2-8 sem','Fortalecimiento de cadera (glúteo medio/mayor) y cuádriceps, control de valgo dinámico.'],
+         ['Fase 3 · Reintegración','8-12 sem','Progresión a carrera y gestos deportivos según tolerancia.']],
+        [['Fortalecimiento de glúteo medio y control de valgo dinámico','Ejercicios en cadena cerrada con foco en alineación de rodilla sobre el pie (monopodales, escalones, sentadillas).']])
+    ]},
+
+    hombro:{ lesiones:[
+      mk('Síndrome de pinzamiento subacromial',
+        'Compresión de estructuras subacromiales (tendón supraespinoso, bursa) durante la elevación del brazo.',
+        'Dolor en cara anterolateral del hombro que empeora con elevación/rotación, por compresión mecánica de tejidos subacromiales.',
+        'Una de las causas más frecuentes de consulta por dolor de hombro; alta asociación con déficit de control escapular y de manguito rotador.',
+        [['Neer','Elevación pasiva del brazo en rotación interna con escápula fijada. Positivo: dolor en el arco de elevación.'],
+         ['Hawkins-Kennedy','Hombro y codo en 90°, rotación interna forzada. Positivo: dolor anterolateral reproducido.']],
+        [['Fase 1 · Control de dolor','0-2 sem','Modificación de actividad, control de dolor, movilidad activa-asistida sin dolor.'],
+         ['Fase 2 · Fortalecimiento del manguito','2-8 sem','Fortalecimiento de manguito rotador y estabilizadores escapulares (serrato anterior, trapecio inferior).'],
+         ['Fase 3 · Reintegración funcional','8-12 sem','Gestos por encima de la cabeza progresivos según tolerancia.']],
+        [['Fortalecimiento de manguito rotador y control escapular','Rotación externa/interna con banda, remo, press progresivo priorizando control escapular sobre carga.']]),
+      mk('Lesión del manguito rotador (supraespinoso)',
+        'Rotura parcial o total del tendón supraespinoso, de causa traumática o degenerativa/por sobreuso.',
+        'Rotura tendinosa del manguito rotador (más frecuente supraespinoso), por trauma agudo o degeneración progresiva relacionada a la edad y sobrecarga.',
+        'Prevalencia de roturas asintomáticas aumenta marcadamente con la edad; no toda rotura visible en imagen es sintomática ni requiere cirugía.',
+        [['Jobe (empty can)','Abducción 90° en plano escapular con rotación interna, resistencia hacia abajo. Positivo: dolor o debilidad.'],
+         ['Drop arm test','Se lleva el brazo a abducción completa y se pide descenso controlado. Positivo: caída brusca del brazo por debilidad/dolor.']],
+        [['Fase 1 · Post-quirúrgica/conservadora inicial','0-4 sem','Protección según reparación, movilidad pasiva/activa-asistida, control de dolor.'],
+         ['Fase 2 · Fortalecimiento progresivo','4-12 sem','Fortalecimiento isométrico a isotónico del manguito, control escapular.'],
+         ['Fase 3 · Retorno funcional','3-6 meses','Reintegración a gestos por encima de la cabeza y deporte según criterios de fuerza.']],
+        [['Progresión isométrica → isotónica de manguito rotador','Rotación externa/interna en rangos protegidos, progresando carga y rango según dolor y control.']]),
+      mk('Inestabilidad glenohumeral anterior',
+        'Laxitud o luxación/subluxación anterior recurrente de la articulación glenohumeral, típicamente post-traumática.',
+        'Pérdida de la estabilidad anterior del hombro, habitualmente luego de un episodio de luxación traumática (brazo en abducción-rotación externa).',
+        'Mayor riesgo de recidiva en pacientes jóvenes (<25 años) y en deportes de contacto/lanzamiento; la recurrencia condiciona fuertemente el manejo.',
+        [['Apprehension test','Abducción 90° + rotación externa progresiva. Positivo: aprensión/sensación de inestabilidad (no necesariamente dolor).'],
+         ['Relocation test','Igual posición + presión posterior sobre la cabeza humeral. Positivo: alivio de la aprensión.']],
+        [['Fase 1 · Protección inicial','0-3 sem','Inmovilización relativa según indicación, control de dolor, movilidad protegida.'],
+         ['Fase 2 · Fortalecimiento dinámico','3-10 sem','Fortalecimiento de manguito rotador y estabilizadores escapulares para estabilidad dinámica.'],
+         ['Fase 3 · Reintegración deportiva','3-6 meses','Progresión a posiciones de riesgo (abducción-RE) según tolerancia y control.']],
+        [['Estabilización dinámica del manguito rotador','Ejercicios de co-contracción y control neuromuscular en rangos progresivos hacia la posición de aprensión.']])
+    ]},
+
+    codo:{ lesiones:[
+      mk('Epicondilalgia lateral (codo de tenista)',
+        'Tendinopatía de los extensores de muñeca en su origen epicondíleo lateral, por sobreuso.',
+        'Dolor en epicóndilo lateral por sobrecarga de los tendones extensores de muñeca (principalmente extensor corto radial del carpo).',
+        'Muy frecuente en trabajos manuales repetitivos, no solo en tenistas; pico de incidencia entre 40-60 años.',
+        [['Cozen\'s test','Extensión resistida de muñeca con codo en extensión. Positivo: dolor en epicóndilo lateral.'],
+         ['Mill\'s test','Estiramiento pasivo de extensores (muñeca flexionada + pronación) con codo en extensión. Positivo: dolor lateral.']],
+        [['Fase 1 · Control de carga','0-2 sem','Modificación de actividad, isometría en rangos tolerables.'],
+         ['Fase 2 · Fortalecimiento excéntrico/HSR','2-8 sem','Fortalecimiento progresivo de extensores de muñeca, foco excéntrico.'],
+         ['Fase 3 · Reintegración funcional','8-12 sem','Retorno gradual a la actividad/deporte causal con monitoreo de síntomas.']],
+        [['Fortalecimiento excéntrico de extensores de muñeca','Protocolo tipo Tyler twist o excéntricos con banda, progresión de carga y velocidad según tolerancia.']]),
+      mk('Epitrocleítis (codo de golfista)',
+        'Tendinopatía de los flexores/pronadores en su origen en el epicóndilo medial, por sobreuso.',
+        'Dolor en epicóndilo medial por sobrecarga de los tendones flexores de muñeca y pronador redondo.',
+        'Menos frecuente que la lateral (relación aprox. 1:7); frecuente en deportes de lanzamiento y golf.',
+        [['Test de resistencia a flexión/pronación','Flexión de muñeca + pronación resistidas con codo en extensión. Positivo: dolor medial.'],
+         ['Palpación epicóndilo medial','Dolor focal reproducible a la palpación directa 1-2cm distal al epicóndilo.']],
+        [['Fase 1 · Control de carga','0-2 sem','Modificación de actividad, isometría de flexores en rangos tolerables.'],
+         ['Fase 2 · Fortalecimiento progresivo','2-8 sem','Fortalecimiento isotónico de flexores/pronadores.'],
+         ['Fase 3 · Reintegración','8-12 sem','Retorno gradual al gesto deportivo causal.']],
+        [['Fortalecimiento progresivo de flexores de muñeca','Isometría → isotónico → excéntrico, con atención a la técnica del gesto deportivo (swing, lanzamiento).']])
+    ]},
+
+    muneca:{ lesiones:[
+      mk('Síndrome del túnel carpiano',
+        'Compresión del nervio mediano a su paso por el túnel carpiano.',
+        'Neuropatía compresiva del nervio mediano en la muñeca, con parestesias/dolor en territorio de mediano (1°-3° dedos y mitad del 4°).',
+        'Una de las neuropatías compresivas más frecuentes; mayor prevalencia en mujeres y en trabajos con movimientos repetitivos de muñeca.',
+        [['Tinel','Percusión sobre el nervio mediano a nivel del túnel carpiano. Positivo: parestesias irradiadas al territorio de mediano.'],
+         ['Phalen','Flexión palmar máxima de ambas muñecas sostenida 60 seg. Positivo: reproducción de parestesias.']],
+        [['Fase 1 · Control de síntomas','0-4 sem','Modificación de actividad, férula nocturna en posición neutra, deslizamiento neural suave.'],
+         ['Fase 2 · Fortalecimiento y movilidad','4-8 sem','Fortalecimiento progresivo de mano/antebrazo, técnicas de deslizamiento neural.'],
+         ['Fase 3 · Reintegración','8-12 sem','Retorno gradual a la actividad causal con manejo ergonómico.']],
+        [['Técnicas de deslizamiento neural del mediano','Movilización neurodinámica progresiva combinando posiciones de tensión/deslizamiento del nervio mediano.']]),
+      mk('Tenosinovitis de De Quervain',
+        'Inflamación de los tendones del primer compartimento extensor (abductor largo y extensor corto del pulgar).',
+        'Dolor en cara radial de la muñeca por sobreuso del primer compartimento extensor, frecuente en movimientos repetitivos de pinza/agarre.',
+        'Frecuente en el posparto (por sobrecarga al sostener al bebé) y en trabajos con uso repetitivo del pulgar.',
+        [['Finkelstein','Puño con pulgar dentro, desviación cubital de muñeca. Positivo: dolor agudo en estiloides radial.']],
+        [['Fase 1 · Control de carga','0-2 sem','Modificación de actividad, férula de pulgar, isometría suave.'],
+         ['Fase 2 · Fortalecimiento progresivo','2-6 sem','Fortalecimiento isotónico progresivo de pulgar y muñeca.'],
+         ['Fase 3 · Reintegración','6-8 sem','Retorno gradual a la actividad causal.']],
+        [['Fortalecimiento progresivo de pulgar','Isometría → isotónico con banda, progresión de carga según tolerancia al dolor.']])
+    ]},
+
+    cuello:{ lesiones:[
+      mk('Cervicalgia mecánica inespecífica',
+        'Dolor cervical de origen musculoesquelético sin compromiso neurológico ni causa estructural específica.',
+        'Dolor en región cervical relacionado a sobrecarga postural/muscular, sin signos de alarma ni compromiso radicular.',
+        'Una de las causas más frecuentes de consulta musculoesquelética; alta prevalencia asociada a trabajo sedentario y estrés.',
+        [['ROM cervical activo','Evaluación de rango de flexión/extensión/rotación/inclinación lateral, comparando con valores normativos y dolor asociado.'],
+         ['Palpación de musculatura cervical/trapecio superior','Identificación de puntos gatillo y tensión muscular localizada.']],
+        [['Fase 1 · Control de dolor','0-2 sem','Educación, movilidad activa suave, control de carga postural.'],
+         ['Fase 2 · Fortalecimiento','2-6 sem','Fortalecimiento de flexores profundos cervicales y estabilizadores escapulares.'],
+         ['Fase 3 · Reintegración','6-8 sem','Retorno a actividad completa según tolerancia.']],
+        [['Fortalecimiento de flexores cervicales profundos','Ejercicios de control motor tipo craneocervical flexion test progresando a resistencia.']]),
+      mk('Latigazo cervical (whiplash)',
+        'Lesión por mecanismo de aceleración-desaceleración brusca del cuello, típicamente en accidentes de tránsito.',
+        'Trauma en flexo-extensión cervical brusca que puede afectar tejidos blandos, articulaciones facetarias y estructuras neurales.',
+        'Clasificación por grados (Quebec Task Force); banderas rojas (compromiso neurológico, fractura) requieren descarte antes de tratamiento activo.',
+        [['Descarte de banderas rojas','Evaluación neurológica, antecedente de trauma de alta energía, edad, uso de collar previo — descartar antes de progresar.'],
+         ['ROM y tolerancia al movimiento activo','Evaluación de rango cervical activo y respuesta al movimiento como guía de progresión temprana.']],
+        [['Fase 1 · Movimiento temprano','0-1 sem','Educación, evitar reposo prolongado, movilidad activa temprana dentro de tolerancia.'],
+         ['Fase 2 · Fortalecimiento','1-6 sem','Fortalecimiento progresivo de musculatura cervical y control motor.'],
+         ['Fase 3 · Reintegración','6-12 sem','Retorno a actividad/trabajo/deporte según tolerancia y ausencia de banderas rojas.']],
+        [['Movilización activa temprana','Evitar inmovilización prolongada; priorizar movimiento activo guiado por dolor desde etapas iniciales.']])
+    ]},
+
+    columna:{ lesiones:[
+      mk('Lumbalgia mecánica inespecífica',
+        'Dolor lumbar sin causa estructural específica identificable, la presentación más frecuente de dolor lumbar.',
+        'Dolor en región lumbar relacionado a sobrecarga mecánica/postural, sin compromiso radicular ni banderas rojas.',
+        'Representa la gran mayoría de los casos de dolor lumbar; el pronóstico es favorable con manejo activo y educación.',
+        [['Descarte de banderas rojas','Edad, antecedentes oncológicos, fiebre, pérdida de peso, trauma — descartar causas graves antes de tratamiento activo.'],
+         ['Control de movimiento lumbar (Movement Control tests)','Evaluación de patrones de movimiento y capacidad de disociar segmentos durante tareas funcionales.']],
+        [['Fase 1 · Educación y movimiento','0-2 sem','Educación en neurociencia del dolor, mantener actividad, evitar reposo prolongado.'],
+         ['Fase 2 · Fortalecimiento y control motor','2-8 sem','Fortalecimiento de core, control motor lumbopélvico, tolerancia a la carga.'],
+         ['Fase 3 · Reintegración','8-12 sem','Retorno gradual a actividad/deporte/trabajo completo.']],
+        [['Control motor lumbopélvico','Progresión desde activación de core en decúbito hasta patrones funcionales de bisagra de cadera bajo carga.']]),
+      mk('Hernia discal lumbar con radiculopatía',
+        'Protrusión/extrusión de material discal que comprime o irrita una raíz nerviosa lumbar.',
+        'Dolor lumbar irradiado a miembro inferior siguiendo un dermatoma, con o sin déficit neurológico asociado (fuerza, reflejos, sensibilidad).',
+        'La mayoría evoluciona favorablemente con manejo conservador; la cirugía se reserva para déficit progresivo o fracaso del tratamiento conservador.',
+        [['SLR (Lasègue)','Elevación pasiva de pierna extendida en decúbito supino. Positivo: reproducción del dolor irradiado entre 30-70°.'],
+         ['Slump test','Sensibilización neural en sedestación con flexión de tronco, cuello y rodilla. Positivo: reproducción de síntomas radiculares.']],
+        [['Fase 1 · Control de síntomas','0-2 sem','Manejo de dolor, posiciones de alivio, evitar reposo prolongado, educación.'],
+         ['Fase 2 · Movilidad neural y fortalecimiento','2-8 sem','Deslizamiento neural progresivo, fortalecimiento de core según tolerancia.'],
+         ['Fase 3 · Reintegración','8-12 sem','Retorno gradual a actividad completa, monitoreo de síntomas neurológicos.']],
+        [['Deslizamiento neural progresivo (ciático)','Técnicas de neurodinamia en rangos progresivos, evitando sensibilización excesiva del tejido neural.']])
+    ]},
+
+    cadera:{ lesiones:[
+      mk('Síndrome de pinzamiento femoroacetabular (FAI)',
+        'Contacto anómalo entre fémur proximal y acetábulo durante rangos de movimiento de cadera, por morfología ósea alterada (cam/pincer).',
+        'Dolor inguinal anterior relacionado a rangos de flexión/rotación interna de cadera, por conflicto mecánico entre fémur y acetábulo.',
+        'Frecuente en deportes que requieren rangos extremos de cadera (fútbol, hockey, danza); alta prevalencia de hallazgos morfológicos asintomáticos.',
+        [['FADIR','Flexión + aducción + rotación interna de cadera. Positivo: reproducción de dolor inguinal anterior.'],
+         ['Palpación/dolor inguinal a la flexión profunda','Dolor reproducido en flexión de cadera >90° combinada con rotación interna.']],
+        [['Fase 1 · Control de síntomas','0-2 sem','Modificación de actividad/rangos provocativos, control de dolor.'],
+         ['Fase 2 · Fortalecimiento y control motor','2-8 sem','Fortalecimiento de rotadores/estabilizadores de cadera, control lumbopélvico.'],
+         ['Fase 3 · Reintegración','8-12 sem','Retorno gradual a gestos deportivos con rangos extremos de cadera.']],
+        [['Fortalecimiento de estabilizadores de cadera','Trabajo de glúteo medio/mayor y control lumbopélvico, evitando rangos extremos provocativos en fases iniciales.']]),
+      mk('Tendinopatía glútea (síndrome trocantéreo mayor)',
+        'Tendinopatía de glúteo medio/menor en su inserción en el trocánter mayor, causa más frecuente de dolor lateral de cadera.',
+        'Dolor en cara lateral de cadera sobre el trocánter mayor, relacionado a sobrecarga por compresión y tensión del tendón glúteo.',
+        'Más frecuente en mujeres de mediana edad; posiciones de aducción sostenida (sentarse con piernas cruzadas, dormir de lado) agravan los síntomas.',
+        [['Single leg stance test (30 seg)','Apoyo monopodal sostenido. Positivo: reproducción de dolor lateral de cadera.'],
+         ['Palpación de trocánter mayor','Dolor focal reproducible a la palpación directa sobre el trocánter mayor.']],
+        [['Fase 1 · Control de carga','0-2 sem','Evitar posiciones de compresión (aducción sostenida), isometría en rangos tolerables.'],
+         ['Fase 2 · Fortalecimiento progresivo','2-8 sem','Fortalecimiento isotónico de glúteo medio evitando aducción excesiva.'],
+         ['Fase 3 · Reintegración','8-12 sem','Retorno gradual a carrera/deporte según tolerancia.']],
+        [['Fortalecimiento de glúteo medio evitando compresión','Ejercicios en rangos que no comprometan la posición de aducción sostenida, progresando carga gradualmente.']])
+    ]},
+
+    tobillo:{ lesiones:[
+      mk('Esguince de tobillo (LPAA)',
+        'Lesión del ligamento peroneoastragalino anterior por mecanismo de inversión, la lesión de tobillo más frecuente.',
+        'Lesión ligamentaria lateral de tobillo por mecanismo de inversión forzada, habitualmente con el pie en flexión plantar.',
+        'Muy alta tasa de recurrencia (hasta 1 de cada 3) si no se aborda el control neuromuscular; principal causa de inestabilidad crónica de tobillo.',
+        [['Anterior drawer test','Estabilización de tibia, tracción anterior de calcáneo/talus. Positivo: desplazamiento aumentado vs. contralateral.'],
+         ['Ottawa Ankle Rules','Criterios clínicos para decidir necesidad de radiografía (dolor en maléolos + incapacidad de apoyo) — no evalúa el ligamento en sí.']],
+        [['Fase 1 · Control de dolor/edema','0-1 sem','RICE modificado, carga temprana protegida según tolerancia, movilidad activa.'],
+         ['Fase 2 · Fuerza y propiocepción','1-6 sem','Fortalecimiento de peroneos, trabajo propioceptivo progresivo (balance, superficies inestables).'],
+         ['Fase 3 · Reintegración deportiva','6-8 sem','Progresión a carrera, cambios de dirección y gestos específicos con criterios funcionales.']],
+        [['Entrenamiento propioceptivo progresivo','Balance monopodal en superficies progresivamente inestables, con y sin perturbación, hasta gestos deportivos específicos.']]),
+      mk('Fascitis plantar',
+        'Sobrecarga de la fascia plantar en su inserción en el calcáneo, causa más frecuente de dolor plantar de talón.',
+        'Dolor en cara plantar del talón, típicamente más intenso con los primeros pasos matutinos, por sobrecarga de la fascia plantar.',
+        'Muy prevalente en corredores y en personas con sobrepeso o bipedestación prolongada; el dolor matinal característico orienta fuertemente el diagnóstico.',
+        [['Windlass test','Dorsiflexión pasiva del primer dedo con el pie en apoyo. Positivo: reproducción de dolor plantar.'],
+         ['Palpación de inserción calcánea medial','Dolor focal reproducible en la inserción de la fascia en el calcáneo.']],
+        [['Fase 1 · Control de carga','0-2 sem','Modificación de actividad, isometría de fascia/tríceps sural, calzado adecuado.'],
+         ['Fase 2 · Fortalecimiento progresivo','2-8 sem','Fortalecimiento isotónico progresivo (elevaciones de talón con toalla enrollada bajo dedos), estiramiento de tríceps sural.'],
+         ['Fase 3 · Reintegración','8-12 sem','Retorno gradual a carrera/actividad completa según tolerancia.']],
+        [['Fortalecimiento progresivo de fascia plantar/tríceps sural','Elevaciones de talón con dedos en dorsiflexión (sobre toalla enrollada), progresando de isométrico a isotónico cargado.']])
+    ]}
+  }};
 }
 
 function render(){
@@ -265,27 +483,42 @@ function renderBodyView(){
   document.getElementById('topSub').textContent='Casartelli · MP 10722';
 
   const uniqueZonas=[...new Map(ZONAS.map(z=>[z.id,z])).values()];
-  const legend=uniqueZonas.map(z=>`<span class="legend-chip ${z.active?'active':'locked'}">${z.active?'✓ ':'🔒 '}${esc(z.label)}</span>`).join('');
+  const legend=uniqueZonas.map(z=>`<span class="legend-chip ${z.active?'active':'locked'}">${esc(z.label)}</span>`).join('');
 
   const hotspots=ZONAS.map((z,i)=>`
-    <g class="hotspot ${z.active?'active':'locked'}" onclick="${z.active?`openZona('${z.id}')`:`showToast('Próximamente — por ahora estamos afinando el formato con Rodilla')`}">
-      <circle class="dot" cx="${z.x}" cy="${z.y}" r="9" fill="${z.active?'var(--orange)':'#C7CCD6'}" stroke="#fff" stroke-width="2"/>
+    <g class="hotspot ${z.active?'active':'locked'}" onclick="${z.active?`openZona('${z.id}')`:`showToast('Próximamente')`}">
+      ${z.active?`<circle class="pulse" cx="${z.x}" cy="${z.y}" r="9"/>`:''}
+      <circle class="dot" cx="${z.x}" cy="${z.y}" r="9" fill="${z.active?'var(--orange)':'#C7CCD6'}"/>
     </g>`).join('');
 
   document.getElementById('panel').innerHTML=`
     <div class="body-intro">
       <h2>Tocá una zona del cuerpo</h2>
-      <p>Lesiones frecuentes, cómo evaluarlas, estadísticas, tus casos y papers — todo junto por zona.</p>
+      <p>Lesiones frecuentes, cómo evaluarlas, estadísticas, tiempos de evolución, protocolos, tus casos y papers.</p>
     </div>
     <div class="body-wrap">
-      <svg viewBox="0 0 300 520" fill="none">
-        <circle cx="150" cy="45" r="28" fill="var(--surface)" stroke="var(--navy)" stroke-width="3"/>
-        <path d="M150 73 L150 95" stroke="var(--navy)" stroke-width="4" stroke-linecap="round"/>
-        <rect x="108" y="95" width="84" height="150" rx="24" fill="var(--surface)" stroke="var(--navy)" stroke-width="3"/>
-        <path d="M108 112 L76 188 L58 262" stroke="var(--navy)" stroke-width="4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-        <path d="M192 112 L224 188 L242 262" stroke="var(--navy)" stroke-width="4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-        <path d="M130 245 L126 370 L122 470" stroke="var(--navy)" stroke-width="4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-        <path d="M170 245 L174 370 L178 470" stroke="var(--navy)" stroke-width="4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+      <svg viewBox="0 0 300 560" fill="none">
+        <!-- Cabeza y cuello -->
+        <ellipse class="body-figure" cx="150" cy="48" rx="25" ry="29"/>
+        <rect class="body-figure" x="139" y="73" width="22" height="18" rx="7"/>
+        <!-- Torso -->
+        <path class="body-figure" d="M94,99 Q150,86 206,99 L217,178 Q220,216 202,232 L182,244 Q150,254 118,244 L98,232 Q80,216 83,178 Z"/>
+        <!-- Pelvis -->
+        <path class="body-figure" d="M118,240 L182,240 L198,266 Q150,280 102,266 Z"/>
+        <!-- Brazos (superior + antebrazo, trazo grueso con punta redonda) -->
+        <path class="body-limb" d="M98,112 L64,168" stroke-width="26"/>
+        <path class="body-limb" d="M64,168 L58,236" stroke-width="20"/>
+        <path class="body-limb" d="M202,112 L236,168" stroke-width="26"/>
+        <path class="body-limb" d="M236,168 L242,236" stroke-width="20"/>
+        <ellipse class="body-figure" cx="56" cy="256" rx="13" ry="17"/>
+        <ellipse class="body-figure" cx="244" cy="256" rx="13" ry="17"/>
+        <!-- Piernas (muslo + pantorrilla) -->
+        <path class="body-limb" d="M126,270 L122,368" stroke-width="34"/>
+        <path class="body-limb" d="M122,368 L118,486" stroke-width="24"/>
+        <path class="body-limb" d="M174,270 L178,368" stroke-width="34"/>
+        <path class="body-limb" d="M178,368 L182,486" stroke-width="24"/>
+        <ellipse class="body-figure" cx="116" cy="504" rx="19" ry="12"/>
+        <ellipse class="body-figure" cx="184" cy="504" rx="19" ry="12"/>
         ${hotspots}
       </svg>
     </div>
@@ -305,7 +538,7 @@ function getZonaData(zonaId){
 function renderZonaView(){
   document.getElementById('btnBack').style.display='inline-block';
   document.getElementById('topTitle').textContent=ZONA_LABELS[currentZona]||'Zona';
-  document.getElementById('topSub').textContent='Lesiones, evaluación, estadísticas, casos y papers';
+  document.getElementById('topSub').textContent='Lesiones, evaluación, evolución, protocolos, casos y papers';
 
   const z=getZonaData(currentZona);
   const q=(document.getElementById('zonaSearchInput')?document.getElementById('zonaSearchInput').value:'').toLowerCase();
@@ -317,14 +550,17 @@ function renderZonaView(){
   document.getElementById('panel').innerHTML=`
     <div class="zona-header">
       <input class="zona-search" id="zonaSearchInput" placeholder="Buscar lesión…" value="${esc(q)}" oninput="renderZonaView()">
+      <div class="view-toggle">
+        <button class="${viewMode==='compact'?'on':''}" onclick="setViewMode('compact')">Acotada</button>
+        <button class="${viewMode==='full'?'on':''}" onclick="setViewMode('full')">Completa</button>
+      </div>
       <button class="btn-add-lesion" onclick="addLesion()">+ Agregar lesión / patología</button>
     </div>
-    <div class="lesion-list">${cardsHtml}</div>
+    <div class="lesion-list ${viewMode==='compact'?'compact':''}">${cardsHtml}</div>
   `;
-  // Restaurar foco de búsqueda si estaba escribiendo
-  const inp=document.getElementById('zonaSearchInput');
-  if(document.activeElement===inp){} // noop, ya tiene el valor
 }
+
+function setViewMode(mode){ viewMode=mode; renderZonaView(); }
 
 function buildLesionCard(l){
   const open=openLesionIds.has(l.id);
@@ -332,7 +568,24 @@ function buildLesionCard(l){
     <div class="sub-item">
       <button class="si-del" onclick="removeSubItem('${l.id}','evaluacion',${i})" title="Eliminar">×</button>
       <input class="si-title" value="${esc(e.nombre)}" placeholder="Nombre del test (ej. Lachman)" oninput="updateSubItem('${l.id}','evaluacion',${i},'nombre',this.value)">
-      <textarea class="si-body" placeholder="Cómo se hace y qué indica un resultado positivo…" oninput="updateSubItem('${l.id}','evaluacion',${i},'detalle',this.value)">${esc(e.detalle)}</textarea>
+      <textarea class="si-body full-only" placeholder="Cómo se hace y qué indica un resultado positivo…" oninput="updateSubItem('${l.id}','evaluacion',${i},'detalle',this.value)">${esc(e.detalle)}</textarea>
+    </div>`).join('');
+
+  const evolHtml=(l.evolucion||[]).map((ph,i)=>`
+    <div class="phase-item">
+      <button class="si-del" onclick="removeSubItem('${l.id}','evolucion',${i})" title="Eliminar">×</button>
+      <div class="phase-time"><input value="${esc(ph.tiempo)}" placeholder="0-2 sem" oninput="updateSubItem('${l.id}','evolucion',${i},'tiempo',this.value)"></div>
+      <div class="phase-body">
+        <input class="si-title" value="${esc(ph.fase)}" placeholder="Nombre de la fase" oninput="updateSubItem('${l.id}','evolucion',${i},'fase',this.value)">
+        <textarea class="si-body full-only" placeholder="Objetivos, hitos, criterios de progresión…" oninput="updateSubItem('${l.id}','evolucion',${i},'descripcion',this.value)">${esc(ph.descripcion)}</textarea>
+      </div>
+    </div>`).join('');
+
+  const protoHtml=(l.protocolos||[]).map((pr,i)=>`
+    <div class="sub-item">
+      <button class="si-del" onclick="removeSubItem('${l.id}','protocolos',${i})" title="Eliminar">×</button>
+      <input class="si-title" value="${esc(pr.nombre)}" placeholder="Nombre del protocolo" oninput="updateSubItem('${l.id}','protocolos',${i},'nombre',this.value)">
+      <textarea class="si-body" placeholder="Pasos, series/reps, progresión, criterios…" oninput="updateSubItem('${l.id}','protocolos',${i},'contenido',this.value)">${esc(pr.contenido)}</textarea>
     </div>`).join('');
 
   const papersHtml=(l.papers||[]).map((pp,i)=>`
@@ -357,14 +610,19 @@ function buildLesionCard(l){
       <input value="${esc(l.nombre)}" placeholder="Nombre de la lesión" onclick="event.stopPropagation()" oninput="updateLesionField('${l.id}','nombre',this.value)">
       <span class="lesion-chevron">▾</span>
     </div>
+    ${l.resumen?`<div class="resumen-text">${esc(l.resumen)}</div>`:''}
     <div class="lesion-body">
+      <div class="lesion-field">
+        <label>Resumen corto</label>
+        <textarea placeholder="1-2 líneas para la vista acotada…" oninput="updateLesionField('${l.id}','resumen',this.value)" style="min-height:38px;">${esc(l.resumen)}</textarea>
+      </div>
       <div class="lesion-field">
         <label>Descripción</label>
         <textarea placeholder="Qué es, mecanismo de lesión, presentación clínica típica…" oninput="updateLesionField('${l.id}','descripcion',this.value)">${esc(l.descripcion)}</textarea>
       </div>
-      <div class="lesion-field">
+      <div class="lesion-field full-only">
         <label>Estadísticas / epidemiología</label>
-        <textarea placeholder="Incidencia, prevalencia, factores de riesgo, tiempos de RTP…" oninput="updateLesionField('${l.id}','estadisticas',this.value)">${esc(l.estadisticas)}</textarea>
+        <textarea placeholder="Incidencia, prevalencia, factores de riesgo…" oninput="updateLesionField('${l.id}','estadisticas',this.value)">${esc(l.estadisticas)}</textarea>
       </div>
       <div class="lesion-field">
         <div class="sub-section-title">🔍 Cómo evaluarla</div>
@@ -372,11 +630,21 @@ function buildLesionCard(l){
         <button class="btn-add-sub" onclick="addSubItem('${l.id}','evaluacion',{nombre:'',detalle:''})">+ Agregar test</button>
       </div>
       <div class="lesion-field">
+        <div class="sub-section-title">⏱ Tiempos de evolución</div>
+        ${evolHtml}
+        <button class="btn-add-sub" onclick="addSubItem('${l.id}','evolucion',{fase:'',tiempo:'',descripcion:''})">+ Agregar fase</button>
+      </div>
+      <div class="lesion-field full-only">
+        <div class="sub-section-title">🗂 Protocolos</div>
+        ${protoHtml}
+        <button class="btn-add-sub" onclick="addSubItem('${l.id}','protocolos',{nombre:'',contenido:''})">+ Agregar protocolo</button>
+      </div>
+      <div class="lesion-field full-only">
         <div class="sub-section-title">📝 Mis experiencias</div>
         ${expHtml}
         <button class="btn-add-sub" onclick="addSubItem('${l.id}','experiencias',{fecha:new Date().toISOString().slice(0,10),texto:''})">+ Agregar experiencia</button>
       </div>
-      <div class="lesion-field">
+      <div class="lesion-field full-only">
         <div class="sub-section-title">📄 Papers / referencias</div>
         ${papersHtml}
         <button class="btn-add-sub" onclick="addSubItem('${l.id}','papers',{titulo:'',autorAnio:'',link:'',resumen:''})">+ Agregar paper</button>
@@ -397,7 +665,7 @@ function toggleLesion(id){
 function addLesion(){
   const z=getZonaData(currentZona);
   const id=uid();
-  z.lesiones.push({id, nombre:'', descripcion:'', estadisticas:'', evaluacion:[], experiencias:[], papers:[]});
+  z.lesiones.push({id, nombre:'', resumen:'', descripcion:'', estadisticas:'', evaluacion:[], evolucion:[], protocolos:[], experiencias:[], papers:[]});
   openLesionIds.add(id);
   saveDB();
   renderZonaView();
