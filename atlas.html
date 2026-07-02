@@ -65,18 +65,29 @@ button{cursor:pointer;}
 .btn-lock.unlocked{background:var(--orange);}
 .panel{padding:18px 16px 40px;flex:1;}
 
-/* Tablet / landscape (iPad, etc.): la columna angosta de celular
-   se ve perdida en pantallas anchas, así que expandimos el layout. */
+/* Tablet / landscape (iPad, etc.): en pantallas anchas la columna angosta de
+   celular deja huecos enormes a los costados, así que reorganizamos el
+   contenido para usar el espacio en vez de solo centrarlo. */
 @media (min-width:680px){
   .app{max-width:none;}
-  .panel{padding:24px 32px 48px;max-width:1100px;margin:0 auto;width:100%;}
-  .body-wrap svg{max-width:340px;}
+  .panel{padding:24px 32px 48px;max-width:760px;margin:0 auto;width:100%;}
   .lesion-list{display:grid;grid-template-columns:1fr 1fr;gap:12px;align-items:start;}
   .lesion-list.compact{grid-template-columns:1fr 1fr 1fr;}
-  .zona-header{max-width:1100px;margin:0 auto 14px;}
+  .zona-header{max-width:760px;margin:0 auto 14px;}
+  .body-screen{max-width:900px;margin:0 auto;display:flex;align-items:center;gap:36px;text-align:left;}
+  .body-screen .body-intro{text-align:left;}
+  .body-screen .body-intro p{margin:0;}
+  .body-screen .body-wrap{flex-shrink:0;padding:0;}
+  .body-screen .body-wrap svg{max-width:300px;}
+  .body-screen .body-col-right{flex:1;min-width:0;}
+  .body-screen .body-mode-toggle{justify-content:flex-start;}
+  .body-screen .zonas-legend{justify-content:flex-start;margin-top:16px;}
 }
 @media (min-width:680px) and (orientation:portrait){
   .lesion-list{grid-template-columns:1fr;}
+  .body-screen{flex-direction:column;text-align:center;gap:6px;}
+  .body-screen .body-intro{text-align:center;}
+  .body-screen .body-mode-toggle,.body-screen .zonas-legend{justify-content:center;}
 }
 
 /* ── VISTA CUERPO ── */
@@ -90,6 +101,7 @@ button{cursor:pointer;}
 .body-wrap svg{width:100%;max-width:280px;height:auto;}
 .body-figure{fill:url(#bodyGrad);stroke:var(--navy);stroke-width:2;stroke-linejoin:round;filter:url(#bodyShadow);}
 .body-limb{stroke:url(#limbGrad);stroke-linecap:round;fill:none;filter:url(#bodyShadow);}
+.body-limb-line{stroke:var(--navy);fill:none;stroke-linecap:round;}
 .hotspot{cursor:pointer;}
 .hotspot circle.dot{transition:r .12s,fill .12s;stroke:#fff;stroke-width:2.5;}
 .hotspot circle.pulse{fill:none;stroke:var(--orange);stroke-width:2;opacity:0;}
@@ -108,23 +120,31 @@ button{cursor:pointer;}
 .zona-header h2{font-size:18px;color:var(--navy);}
 .zona-search{width:100%;border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 12px;font-size:13px;outline:none;margin:10px 0 10px;background:var(--surface);}
 .zona-search:focus{border-color:var(--navy);background:#fff;}
-.view-toggle{display:flex;background:var(--surface);border:1px solid var(--border);border-radius:30px;padding:3px;margin-bottom:12px;}
+.view-toggle{display:flex;background:var(--surface);border:1px solid var(--border);border-radius:30px;padding:3px;margin-bottom:14px;}
 .view-toggle button{flex:1;border:none;background:transparent;padding:8px 6px;font-size:12.5px;font-weight:600;color:var(--text-2);border-radius:24px;font-family:Inter,sans-serif;}
 .view-toggle button.on{background:var(--navy);color:#fff;}
-.btn-add-lesion{display:flex;align-items:center;justify-content:center;gap:6px;width:100%;padding:11px;background:var(--orange);color:#fff;border:none;border-radius:var(--radius-sm);font-size:13px;font-weight:600;margin-bottom:14px;}
 .lesion-list{display:flex;flex-direction:column;gap:10px;}
 .lesion-card{border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;background:var(--bg);}
-.lesion-head{display:flex;align-items:center;gap:8px;padding:12px 14px;background:var(--surface);cursor:pointer;}
-.lesion-head input{flex:1;border:none;background:transparent;font-size:14px;font-weight:700;color:var(--text);outline:none;font-family:Inter,sans-serif;}
+.lesion-head{display:flex;align-items:center;gap:8px;padding:14px;background:var(--surface);cursor:pointer;}
+.lesion-title-block{flex:1;min-width:0;}
+.lesion-title-block h3{font-size:15px;font-weight:700;color:var(--navy);line-height:1.3;}
 .lesion-chevron{color:var(--text-3);font-size:12px;transition:transform .15s;flex-shrink:0;}
 .lesion-card.open .lesion-chevron{transform:rotate(180deg);}
 .lesion-body{display:none;padding:14px;}
 .lesion-card.open .lesion-body{display:block;}
-.lesion-field{margin-bottom:14px;}
-.lesion-field label{display:block;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text-3);margin-bottom:5px;}
-.lesion-field textarea{width:100%;min-height:56px;border:1px solid var(--border);border-radius:var(--radius-sm);padding:9px 10px;font-size:13px;line-height:1.5;color:var(--text);outline:none;resize:vertical;font-family:Inter,sans-serif;}
-.lesion-field textarea:focus{border-color:var(--navy);}
+.ref-text{font-size:13px;line-height:1.6;color:var(--text);margin-bottom:14px;}
+.ref-block{margin-bottom:14px;}
 .sub-section-title{display:flex;align-items:center;gap:6px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--orange);margin-bottom:8px;}
+.ref-list{list-style:none;}
+.ref-list li{font-size:13px;line-height:1.55;color:var(--text);padding:8px 0;border-bottom:1px solid var(--border);}
+.ref-list li:last-child{border-bottom:none;}
+.ref-list li b{color:var(--navy);}
+.ref-empty{font-size:12px;color:var(--text-3);font-style:italic;}
+.phase-row{display:flex;gap:10px;align-items:flex-start;padding:8px 0;border-bottom:1px solid var(--border);}
+.phase-row:last-child{border-bottom:none;}
+.phase-row div{font-size:13px;line-height:1.5;color:var(--text);}
+.phase-chip{flex-shrink:0;background:var(--blue-chip-light);color:var(--blue-chip);font-size:10.5px;font-weight:700;border-radius:6px;padding:4px 7px;text-align:center;white-space:nowrap;}
+.notes-divider{border:none;border-top:1px dashed var(--border);margin:16px 0;}
 .sub-item{border:1px solid var(--border);border-radius:var(--radius-sm);padding:9px 10px;margin-bottom:7px;position:relative;background:var(--surface);}
 .sub-item input.si-title{width:calc(100% - 26px);border:none;background:transparent;font-size:13px;font-weight:600;color:var(--text);outline:none;margin-bottom:5px;font-family:Inter,sans-serif;}
 .sub-item textarea.si-body{width:100%;border:none;background:transparent;font-size:12.5px;color:var(--text-2);outline:none;resize:vertical;min-height:38px;line-height:1.45;font-family:Inter,sans-serif;}
@@ -132,20 +152,12 @@ button{cursor:pointer;}
 .sub-item .si-del{position:absolute;top:8px;right:8px;background:none;border:none;color:var(--text-3);font-size:15px;font-weight:700;line-height:1;padding:2px;}
 .sub-item .si-date{font-size:10.5px;color:var(--text-3);margin-bottom:3px;display:block;}
 .btn-add-sub{width:100%;padding:8px;border:1.5px dashed var(--border);border-radius:var(--radius-sm);background:transparent;color:var(--text-2);font-size:12px;font-weight:600;font-family:Inter,sans-serif;}
-.lesion-actions{display:flex;justify-content:flex-end;margin-top:6px;}
-.btn-del-lesion{padding:7px 12px;background:transparent;border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text-3);font-size:12px;font-family:Inter,sans-serif;}
 .empty-zona{text-align:center;padding:40px 20px;color:var(--text-3);font-size:13px;}
 .resumen-text{font-size:12.5px;color:var(--text-2);line-height:1.5;padding:0 14px 10px;margin-top:-4px;}
 .lesion-card.open .resumen-text{display:none;}
-.phase-item{display:flex;gap:10px;border:1px solid var(--border);border-radius:var(--radius-sm);padding:9px 10px;margin-bottom:7px;background:var(--surface);position:relative;}
-.phase-time{flex-shrink:0;width:64px;}
-.phase-time input{width:100%;border:none;background:var(--blue-chip-light);color:var(--blue-chip);font-size:11px;font-weight:700;border-radius:6px;padding:5px 6px;text-align:center;outline:none;font-family:Inter,sans-serif;}
-.phase-body{flex:1;min-width:0;}
-.phase-body input.si-title{width:calc(100% - 20px);margin-bottom:4px;}
-.phase-body textarea.si-body{width:100%;}
 .lesion-list.compact .full-only{display:none;}
 .lesion-list.compact .lesion-body{padding-bottom:10px;}
-#app.locked .btn-add-sub,#app.locked .btn-add-lesion,#app.locked .btn-del-lesion,#app.locked .si-del{display:none!important;}
+#app.locked .btn-add-sub,#app.locked .edit-only,#app.locked .si-del{display:none!important;}
 #app.locked input[readonly],#app.locked textarea[readonly]{color:var(--text);opacity:1;}
 .lock-hint{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text-3);background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:6px 12px;margin-bottom:12px;justify-content:center;}
 #app:not(.locked) .lock-hint{background:var(--orange-light);color:var(--orange);border-color:transparent;}
@@ -301,7 +313,7 @@ function seedDefaultData(){
       mk('Lesión de LCA (ligamento cruzado anterior)',
         'Rotura del LCA por mecanismo de pivote/desaceleración sin contacto. RTP típico 9-12 meses post reconstrucción.',
         'Rotura total o parcial del LCA, típicamente por valgo + rotación externa de tibia con pie fijo. Frecuente en deportes con cambios de dirección.',
-        'Mayor incidencia en deportes de pivoteo; mayor riesgo relativo en mujeres vs. hombres en el mismo deporte. Alta tasa de re-rotura en <18 años que vuelven antes de los 9 meses.',
+        'La incidencia anual estimada en población general es baja, pero se dispara en deportes de pivoteo (fútbol, básquet, handball). El riesgo relativo es 2-8 veces mayor en mujeres que en hombres en el mismo deporte, atribuido a factores anatómicos, hormonales y de control neuromuscular. El riesgo de una segunda lesión (mismo lado o contralateral) es marcadamente mayor en menores de 18-25 años que retoman el deporte antes de los 9 meses o sin superar los criterios de LSI.',
         [['Lachman','Rodilla en 20-30° flexión, se tracciona la tibia hacia anterior estabilizando el fémur. Positivo: desplazamiento aumentado sin punto final firme.'],
          ['Pivot shift','Valgo + rotación interna en extensión, se flexiona progresivamente. Positivo: reducción brusca (clunk) ~20-30°, indica inestabilidad rotacional.']],
         [['Fase 1 · Control inicial','0-2 sem','Control de dolor/derrame, extensión completa, activación de cuádriceps, marcha sin claudicación.'],
@@ -312,7 +324,7 @@ function seedDefaultData(){
       mk('Lesión meniscal',
         'Rotura de menisco medial o lateral, traumática o degenerativa. Puede asociarse a lesión de LCA.',
         'Rotura del menisco medial o lateral por torsión con pie fijo (traumática) o por desgaste (degenerativa, >40 años).',
-        'El menisco medial se lesiona con más frecuencia que el lateral en mecanismos traumáticos; en mayores de 40 predominan las roturas degenerativas.',
+        'El menisco medial se lesiona con más frecuencia que el lateral en mecanismos traumáticos, en parte por su menor movilidad y su relación con el ligamento colateral medial. En mayores de 40 años predominan las roturas degenerativas, muchas veces asintomáticas u observadas incidentalmente en resonancia. Hasta un tercio de las lesiones de LCA presentan lesión meniscal asociada.',
         [['McMurray','Flexión máxima, rotación de tibia mientras se extiende. Positivo: click o dolor en la interlínea articular.'],
          ['Thessaly','Apoyo monopodal en 20° de flexión con rotación del tronco. Positivo: dolor en interlínea o bloqueo.']],
         [['Fase 1 · Post-quirúrgica/conservadora','0-3 sem','Control de derrame, ROM progresivo según tipo de reparación (meniscectomía vs. sutura).'],
@@ -322,7 +334,7 @@ function seedDefaultData(){
       mk('Tendinopatía rotuliana',
         '"Rodilla del saltador". Sobrecarga del tendón rotuliano por sobreuso en deportes de salto.',
         'Sobrecarga del tendón rotuliano (habitualmente polo inferior de rótula) por acumulación de carga en deportes de salto/aceleración-desaceleración.',
-        'Muy prevalente en voley y básquet; el dolor localizado y el volumen de saltos acumulado son los principales factores asociados.',
+        'Muy prevalente en deportes de salto (voley, básquet), con cifras reportadas de hasta 40-50% de prevalencia en algún momento de la carrera deportiva en voley de élite. El volumen e intensidad de exposición al salto es el principal factor de riesgo modificable; sigue un curso de tendinopatía reactiva a degenerativa si la carga no se regula a tiempo.',
         [['Palpación polo inferior de rótula','Dolor focal reproducible a la palpación directa con rodilla en extensión.'],
          ['Single leg decline squat','Sentadilla monopodal en plano declinado 25°. Reproduce el dolor típico y gradúa severidad (complementar con VISA-P).']],
         [['Fase 1 · Isométricos','0-2 sem','Isometría en rangos de dolor tolerable para analgesia y mantenimiento de capacidad de carga.'],
@@ -332,7 +344,7 @@ function seedDefaultData(){
       mk('Síndrome femoropatelar',
         'Dolor difuso anterior de rodilla por alteración del tracking patelar o déficit de control proximal. Diagnóstico de exclusión.',
         'Dolor difuso anterior/retropatelar relacionado a alteración del tracking patelar, sobrecarga o déficit de control neuromuscular de cadera/rodilla.',
-        'Una de las causas más frecuentes de dolor de rodilla en corredores y deportistas jóvenes; alta recurrencia si no se aborda el control motor proximal.',
+        'Una de las causas más frecuentes de dolor de rodilla en corredores y deportistas jóvenes, con mayor prevalencia en mujeres adolescentes. La recurrencia/cronicidad a largo plazo es considerable (hasta la mitad de los casos persiste con síntomas años después) cuando no se aborda el control motor de cadera y no solo el dolor local.',
         [['Clarke / grinding test','Compresión de rótula contra tróclea con contracción de cuádriceps. Positivo: dolor retropatelar (poco específico, usar junto a otros).'],
          ['Step-down test','Descenso controlado de un escalón. Evalúa control de valgo dinámico y reproduce el dolor funcional.']],
         [['Fase 1 · Control de síntomas','0-2 sem','Modificación de carga, control de dolor, activación de glúteo medio.'],
@@ -345,7 +357,7 @@ function seedDefaultData(){
       mk('Síndrome de pinzamiento subacromial',
         'Compresión de estructuras subacromiales (tendón supraespinoso, bursa) durante la elevación del brazo.',
         'Dolor en cara anterolateral del hombro que empeora con elevación/rotación, por compresión mecánica de tejidos subacromiales.',
-        'Una de las causas más frecuentes de consulta por dolor de hombro; alta asociación con déficit de control escapular y de manguito rotador.',
+        'Una de las causas más frecuentes de consulta por dolor de hombro, representando una proporción sustancial de las consultas de hombro en atención primaria y deportiva. Alta asociación con déficit de control escapular y de manguito rotador; el término "pinzamiento" describe un patrón clínico más que un diagnóstico estructural único, por lo que el diagnóstico diferencial con lesión de manguito es clave.',
         [['Neer','Elevación pasiva del brazo en rotación interna con escápula fijada. Positivo: dolor en el arco de elevación.'],
          ['Hawkins-Kennedy','Hombro y codo en 90°, rotación interna forzada. Positivo: dolor anterolateral reproducido.']],
         [['Fase 1 · Control de dolor','0-2 sem','Modificación de actividad, control de dolor, movilidad activa-asistida sin dolor.'],
@@ -355,7 +367,7 @@ function seedDefaultData(){
       mk('Lesión del manguito rotador (supraespinoso)',
         'Rotura parcial o total del tendón supraespinoso, de causa traumática o degenerativa/por sobreuso.',
         'Rotura tendinosa del manguito rotador (más frecuente supraespinoso), por trauma agudo o degeneración progresiva relacionada a la edad y sobrecarga.',
-        'Prevalencia de roturas asintomáticas aumenta marcadamente con la edad; no toda rotura visible en imagen es sintomática ni requiere cirugía.',
+        'La prevalencia de roturas asintomáticas aumenta marcadamente con la edad (reportada en un rango amplio, con cifras notablemente más altas después de los 60 años). Esto es clave clínicamente: no toda rotura visible en imagen es sintomática ni requiere cirugía, y la correlación entre hallazgo estructural y síntomas es limitada.',
         [['Jobe (empty can)','Abducción 90° en plano escapular con rotación interna, resistencia hacia abajo. Positivo: dolor o debilidad.'],
          ['Drop arm test','Se lleva el brazo a abducción completa y se pide descenso controlado. Positivo: caída brusca del brazo por debilidad/dolor.']],
         [['Fase 1 · Post-quirúrgica/conservadora inicial','0-4 sem','Protección según reparación, movilidad pasiva/activa-asistida, control de dolor.'],
@@ -365,7 +377,7 @@ function seedDefaultData(){
       mk('Inestabilidad glenohumeral anterior',
         'Laxitud o luxación/subluxación anterior recurrente de la articulación glenohumeral, típicamente post-traumática.',
         'Pérdida de la estabilidad anterior del hombro, habitualmente luego de un episodio de luxación traumática (brazo en abducción-rotación externa).',
-        'Mayor riesgo de recidiva en pacientes jóvenes (<25 años) y en deportes de contacto/lanzamiento; la recurrencia condiciona fuertemente el manejo.',
+        'El riesgo de recidiva tras un primer episodio es marcadamente mayor en pacientes jóvenes (<25 años) y en deportes de contacto/lanzamiento, pudiendo superar el 50% en ese grupo etario con manejo conservador. Esta alta tasa de recurrencia condiciona fuertemente la decisión entre manejo conservador y quirúrgico.',
         [['Apprehension test','Abducción 90° + rotación externa progresiva. Positivo: aprensión/sensación de inestabilidad (no necesariamente dolor).'],
          ['Relocation test','Igual posición + presión posterior sobre la cabeza humeral. Positivo: alivio de la aprensión.']],
         [['Fase 1 · Protección inicial','0-3 sem','Inmovilización relativa según indicación, control de dolor, movilidad protegida.'],
@@ -378,7 +390,7 @@ function seedDefaultData(){
       mk('Epicondilalgia lateral (codo de tenista)',
         'Tendinopatía de los extensores de muñeca en su origen epicondíleo lateral, por sobreuso.',
         'Dolor en epicóndilo lateral por sobrecarga de los tendones extensores de muñeca (principalmente extensor corto radial del carpo).',
-        'Muy frecuente en trabajos manuales repetitivos, no solo en tenistas; pico de incidencia entre 40-60 años.',
+        'Muy frecuente en trabajos manuales repetitivos, no solo en tenistas (de hecho la minoría de los casos ocurre en el contexto deportivo); pico de incidencia entre 40-60 años. El curso natural suele ser autolimitado en 6-24 meses, pero puede cronificarse sin manejo activo de carga.',
         [['Cozen\'s test','Extensión resistida de muñeca con codo en extensión. Positivo: dolor en epicóndilo lateral.'],
          ['Mill\'s test','Estiramiento pasivo de extensores (muñeca flexionada + pronación) con codo en extensión. Positivo: dolor lateral.']],
         [['Fase 1 · Control de carga','0-2 sem','Modificación de actividad, isometría en rangos tolerables.'],
@@ -388,7 +400,7 @@ function seedDefaultData(){
       mk('Epitrocleítis (codo de golfista)',
         'Tendinopatía de los flexores/pronadores en su origen en el epicóndilo medial, por sobreuso.',
         'Dolor en epicóndilo medial por sobrecarga de los tendones flexores de muñeca y pronador redondo.',
-        'Menos frecuente que la lateral (relación aprox. 1:7); frecuente en deportes de lanzamiento y golf.',
+        'Menos frecuente que la epicondilalgia lateral (relación aproximada 1:7); frecuente en deportes de lanzamiento, golf y en trabajos con esfuerzo repetido de agarre/pronación.',
         [['Test de resistencia a flexión/pronación','Flexión de muñeca + pronación resistidas con codo en extensión. Positivo: dolor medial.'],
          ['Palpación epicóndilo medial','Dolor focal reproducible a la palpación directa 1-2cm distal al epicóndilo.']],
         [['Fase 1 · Control de carga','0-2 sem','Modificación de actividad, isometría de flexores en rangos tolerables.'],
@@ -401,7 +413,7 @@ function seedDefaultData(){
       mk('Síndrome del túnel carpiano',
         'Compresión del nervio mediano a su paso por el túnel carpiano.',
         'Neuropatía compresiva del nervio mediano en la muñeca, con parestesias/dolor en territorio de mediano (1°-3° dedos y mitad del 4°).',
-        'Una de las neuropatías compresivas más frecuentes; mayor prevalencia en mujeres y en trabajos con movimientos repetitivos de muñeca.',
+        'Una de las neuropatías compresivas más frecuentes, con mayor prevalencia en mujeres (relación aproximada 3:1) y en trabajos con movimientos repetitivos de muñeca o exposición a vibración. También se asocia a embarazo, diabetes e hipotiroidismo por cambios en el volumen del túnel.',
         [['Tinel','Percusión sobre el nervio mediano a nivel del túnel carpiano. Positivo: parestesias irradiadas al territorio de mediano.'],
          ['Phalen','Flexión palmar máxima de ambas muñecas sostenida 60 seg. Positivo: reproducción de parestesias.']],
         [['Fase 1 · Control de síntomas','0-4 sem','Modificación de actividad, férula nocturna en posición neutra, deslizamiento neural suave.'],
@@ -411,7 +423,7 @@ function seedDefaultData(){
       mk('Tenosinovitis de De Quervain',
         'Inflamación de los tendones del primer compartimento extensor (abductor largo y extensor corto del pulgar).',
         'Dolor en cara radial de la muñeca por sobreuso del primer compartimento extensor, frecuente en movimientos repetitivos de pinza/agarre.',
-        'Frecuente en el posparto (por sobrecarga al sostener al bebé) y en trabajos con uso repetitivo del pulgar.',
+        'Frecuente en el posparto (por sobrecarga repetitiva al sostener al bebé, con mayor incidencia en los primeros meses) y en trabajos con uso repetitivo del pulgar/pinza. Predomina en mujeres de mediana edad.',
         [['Finkelstein','Puño con pulgar dentro, desviación cubital de muñeca. Positivo: dolor agudo en estiloides radial.']],
         [['Fase 1 · Control de carga','0-2 sem','Modificación de actividad, férula de pulgar, isometría suave.'],
          ['Fase 2 · Fortalecimiento progresivo','2-6 sem','Fortalecimiento isotónico progresivo de pulgar y muñeca.'],
@@ -423,7 +435,7 @@ function seedDefaultData(){
       mk('Cervicalgia mecánica inespecífica',
         'Dolor cervical de origen musculoesquelético sin compromiso neurológico ni causa estructural específica.',
         'Dolor en región cervical relacionado a sobrecarga postural/muscular, sin signos de alarma ni compromiso radicular.',
-        'Una de las causas más frecuentes de consulta musculoesquelética; alta prevalencia asociada a trabajo sedentario y estrés.',
+        'Una de las causas más frecuentes de consulta musculoesquelética, con prevalencia puntual estimada entre 10-20% de la población adulta en un momento dado. Alta prevalencia asociada a trabajo sedentario, uso prolongado de pantallas y estrés; el curso suele ser favorable pero con tendencia a la recurrencia.',
         [['ROM cervical activo','Evaluación de rango de flexión/extensión/rotación/inclinación lateral, comparando con valores normativos y dolor asociado.'],
          ['Palpación de musculatura cervical/trapecio superior','Identificación de puntos gatillo y tensión muscular localizada.']],
         [['Fase 1 · Control de dolor','0-2 sem','Educación, movilidad activa suave, control de carga postural.'],
@@ -433,7 +445,7 @@ function seedDefaultData(){
       mk('Latigazo cervical (whiplash)',
         'Lesión por mecanismo de aceleración-desaceleración brusca del cuello, típicamente en accidentes de tránsito.',
         'Trauma en flexo-extensión cervical brusca que puede afectar tejidos blandos, articulaciones facetarias y estructuras neurales.',
-        'Clasificación por grados (Quebec Task Force); banderas rojas (compromiso neurológico, fractura) requieren descarte antes de tratamiento activo.',
+        'Se clasifica por grados de severidad (Quebec Task Force); la mayoría de los casos son grado I-II sin compromiso neurológico. Las banderas rojas (déficit neurológico, sospecha de fractura) requieren descarte antes de iniciar tratamiento activo. Un subgrupo desarrolla síntomas persistentes más allá de los 3 meses, asociado a factores psicosociales además de los físicos.',
         [['Descarte de banderas rojas','Evaluación neurológica, antecedente de trauma de alta energía, edad, uso de collar previo — descartar antes de progresar.'],
          ['ROM y tolerancia al movimiento activo','Evaluación de rango cervical activo y respuesta al movimiento como guía de progresión temprana.']],
         [['Fase 1 · Movimiento temprano','0-1 sem','Educación, evitar reposo prolongado, movilidad activa temprana dentro de tolerancia.'],
@@ -446,7 +458,7 @@ function seedDefaultData(){
       mk('Lumbalgia mecánica inespecífica',
         'Dolor lumbar sin causa estructural específica identificable, la presentación más frecuente de dolor lumbar.',
         'Dolor en región lumbar relacionado a sobrecarga mecánica/postural, sin compromiso radicular ni banderas rojas.',
-        'Representa la gran mayoría de los casos de dolor lumbar; el pronóstico es favorable con manejo activo y educación.',
+        'Representa la gran mayoría de los casos de dolor lumbar (estimaciones superiores al 90% de las consultas por lumbalgia no tienen una causa estructural específica identificable). El pronóstico es favorable con manejo activo y educación; sin embargo, la recurrencia dentro del primer año es frecuente (hasta la mitad de los casos).',
         [['Descarte de banderas rojas','Edad, antecedentes oncológicos, fiebre, pérdida de peso, trauma — descartar causas graves antes de tratamiento activo.'],
          ['Control de movimiento lumbar (Movement Control tests)','Evaluación de patrones de movimiento y capacidad de disociar segmentos durante tareas funcionales.']],
         [['Fase 1 · Educación y movimiento','0-2 sem','Educación en neurociencia del dolor, mantener actividad, evitar reposo prolongado.'],
@@ -456,7 +468,7 @@ function seedDefaultData(){
       mk('Hernia discal lumbar con radiculopatía',
         'Protrusión/extrusión de material discal que comprime o irrita una raíz nerviosa lumbar.',
         'Dolor lumbar irradiado a miembro inferior siguiendo un dermatoma, con o sin déficit neurológico asociado (fuerza, reflejos, sensibilidad).',
-        'La mayoría evoluciona favorablemente con manejo conservador; la cirugía se reserva para déficit progresivo o fracaso del tratamiento conservador.',
+        'La mayoría evoluciona favorablemente con manejo conservador dentro de los primeros 6-12 semanas, incluyendo una proporción relevante de hernias que muestran resorción espontánea en controles imagenológicos. La cirugía se reserva para déficit neurológico progresivo, síndrome de cauda equina (urgencia) o fracaso del tratamiento conservador prolongado.',
         [['SLR (Lasègue)','Elevación pasiva de pierna extendida en decúbito supino. Positivo: reproducción del dolor irradiado entre 30-70°.'],
          ['Slump test','Sensibilización neural en sedestación con flexión de tronco, cuello y rodilla. Positivo: reproducción de síntomas radiculares.']],
         [['Fase 1 · Control de síntomas','0-2 sem','Manejo de dolor, posiciones de alivio, evitar reposo prolongado, educación.'],
@@ -469,7 +481,7 @@ function seedDefaultData(){
       mk('Síndrome de pinzamiento femoroacetabular (FAI)',
         'Contacto anómalo entre fémur proximal y acetábulo durante rangos de movimiento de cadera, por morfología ósea alterada (cam/pincer).',
         'Dolor inguinal anterior relacionado a rangos de flexión/rotación interna de cadera, por conflicto mecánico entre fémur y acetábulo.',
-        'Frecuente en deportes que requieren rangos extremos de cadera (fútbol, hockey, danza); alta prevalencia de hallazgos morfológicos asintomáticos.',
+        'Frecuente en deportes que requieren rangos extremos de cadera (fútbol, hockey, danza, artes marciales). Alta prevalencia de hallazgos morfológicos tipo cam/pincer en personas completamente asintomáticas, por lo que el diagnóstico debe integrar clínica e imagen y no basarse solo en el hallazgo radiológico.',
         [['FADIR','Flexión + aducción + rotación interna de cadera. Positivo: reproducción de dolor inguinal anterior.'],
          ['Palpación/dolor inguinal a la flexión profunda','Dolor reproducido en flexión de cadera >90° combinada con rotación interna.']],
         [['Fase 1 · Control de síntomas','0-2 sem','Modificación de actividad/rangos provocativos, control de dolor.'],
@@ -479,7 +491,7 @@ function seedDefaultData(){
       mk('Tendinopatía glútea (síndrome trocantéreo mayor)',
         'Tendinopatía de glúteo medio/menor en su inserción en el trocánter mayor, causa más frecuente de dolor lateral de cadera.',
         'Dolor en cara lateral de cadera sobre el trocánter mayor, relacionado a sobrecarga por compresión y tensión del tendón glúteo.',
-        'Más frecuente en mujeres de mediana edad; posiciones de aducción sostenida (sentarse con piernas cruzadas, dormir de lado) agravan los síntomas.',
+        'Más frecuente en mujeres de mediana edad (pico entre los 40-60 años), con una prevalencia estimada considerablemente mayor que la de la coxartrosis como causa de dolor lateral de cadera en ese grupo etario. Posiciones de aducción sostenida (sentarse con piernas cruzadas, dormir de lado sin apoyo) agravan los síntomas por compresión del tendón contra el trocánter.',
         [['Single leg stance test (30 seg)','Apoyo monopodal sostenido. Positivo: reproducción de dolor lateral de cadera.'],
          ['Palpación de trocánter mayor','Dolor focal reproducible a la palpación directa sobre el trocánter mayor.']],
         [['Fase 1 · Control de carga','0-2 sem','Evitar posiciones de compresión (aducción sostenida), isometría en rangos tolerables.'],
@@ -492,7 +504,7 @@ function seedDefaultData(){
       mk('Esguince de tobillo (LPAA)',
         'Lesión del ligamento peroneoastragalino anterior por mecanismo de inversión, la lesión de tobillo más frecuente.',
         'Lesión ligamentaria lateral de tobillo por mecanismo de inversión forzada, habitualmente con el pie en flexión plantar.',
-        'Muy alta tasa de recurrencia (hasta 1 de cada 3) si no se aborda el control neuromuscular; principal causa de inestabilidad crónica de tobillo.',
+        'Una de las lesiones deportivas más frecuentes en general. Muy alta tasa de recurrencia (hasta un tercio de los casos) si no se aborda el control neuromuscular tras el episodio agudo; es la principal causa de inestabilidad crónica de tobillo, que puede desarrollarse hasta en el 20-40% de quienes sufren un esguince significativo.',
         [['Anterior drawer test','Estabilización de tibia, tracción anterior de calcáneo/talus. Positivo: desplazamiento aumentado vs. contralateral.'],
          ['Ottawa Ankle Rules','Criterios clínicos para decidir necesidad de radiografía (dolor en maléolos + incapacidad de apoyo) — no evalúa el ligamento en sí.']],
         [['Fase 1 · Control de dolor/edema','0-1 sem','RICE modificado, carga temprana protegida según tolerancia, movilidad activa.'],
@@ -502,7 +514,7 @@ function seedDefaultData(){
       mk('Fascitis plantar',
         'Sobrecarga de la fascia plantar en su inserción en el calcáneo, causa más frecuente de dolor plantar de talón.',
         'Dolor en cara plantar del talón, típicamente más intenso con los primeros pasos matutinos, por sobrecarga de la fascia plantar.',
-        'Muy prevalente en corredores y en personas con sobrepeso o bipedestación prolongada; el dolor matinal característico orienta fuertemente el diagnóstico.',
+        'Muy prevalente en corredores (aumento de incidencia con el volumen de entrenamiento) y en personas con sobrepeso o bipedestación prolongada por motivos laborales. El dolor matinal característico ("primeros pasos") orienta fuertemente el diagnóstico; el curso suele ser autolimitado en 6-12 meses con manejo conservador adecuado.',
         [['Windlass test','Dorsiflexión pasiva del primer dedo con el pie en apoyo. Positivo: reproducción de dolor plantar.'],
          ['Palpación de inserción calcánea medial','Dolor focal reproducible en la inserción de la fascia en el calcáneo.']],
         [['Fase 1 · Control de carga','0-2 sem','Modificación de actividad, isometría de fascia/tríceps sural, calzado adecuado.'],
@@ -553,58 +565,64 @@ function renderBodyView(){
     </g>`).join('');
 
   document.getElementById('panel').innerHTML=`
-    <div class="body-intro">
-      <h2>Tocá una zona del cuerpo</h2>
-      <p>Lesiones frecuentes, cómo evaluarlas, estadísticas, tiempos de evolución, protocolos, tus casos y papers.</p>
+    <div class="body-screen">
+      <div class="body-wrap" id="bodyWrap2d" style="display:${bodyViewMode==='2d'?'flex':'none'};">
+        <svg viewBox="0 0 300 560" fill="none">
+          <defs>
+            <linearGradient id="bodyGrad" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stop-color="#F0F3F8"/>
+              <stop offset="100%" stop-color="#D2DAE6"/>
+            </linearGradient>
+            <linearGradient id="limbGrad" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stop-color="#C7D0DE"/>
+              <stop offset="100%" stop-color="#AAB6C9"/>
+            </linearGradient>
+            <filter id="bodyShadow" x="-30%" y="-30%" width="160%" height="160%">
+              <feDropShadow dx="0" dy="2" stdDeviation="2.5" flood-color="#1B2A4A" flood-opacity="0.18"/>
+            </filter>
+          </defs>
+          <!-- Cabeza y cuello -->
+          <ellipse class="body-figure" cx="150" cy="48" rx="25" ry="29"/>
+          <path class="body-figure" d="M138,68 Q150,78 162,68 L162,80 Q150,90 138,80 Z"/>
+          <!-- Torso -->
+          <path class="body-figure" d="M96,96 Q150,84 204,96 L215,176 Q219,214 201,231 L182,244 Q150,255 118,244 L99,231 Q81,214 85,176 Z"/>
+          <path class="body-limb-line" d="M150,100 L150,235" stroke-width="1.5" opacity="0.35"/>
+          <path class="body-limb-line" d="M120,140 Q150,150 180,140" stroke-width="1.5" opacity="0.3"/>
+          <!-- Pelvis -->
+          <path class="body-figure" d="M118,240 L182,240 L198,266 Q150,280 102,266 Z"/>
+          <!-- Brazos (superior + antebrazo, trazo grueso con punta redonda) -->
+          <path class="body-limb" d="M98,110 L64,168" stroke-width="27"/>
+          <path class="body-limb" d="M64,168 L57,236" stroke-width="19"/>
+          <path class="body-limb" d="M202,110 L236,168" stroke-width="27"/>
+          <path class="body-limb" d="M236,168 L243,236" stroke-width="19"/>
+          <ellipse class="body-figure" cx="55" cy="254" rx="12" ry="17"/>
+          <ellipse class="body-figure" cx="245" cy="254" rx="12" ry="17"/>
+          <!-- Piernas (muslo + pantorrilla) -->
+          <path class="body-limb" d="M128,270 L123,368" stroke-width="35"/>
+          <path class="body-limb" d="M123,368 L118,486" stroke-width="23"/>
+          <path class="body-limb" d="M172,270 L177,368" stroke-width="35"/>
+          <path class="body-limb" d="M177,368 L182,486" stroke-width="23"/>
+          <ellipse class="body-figure" cx="115" cy="504" rx="20" ry="12"/>
+          <ellipse class="body-figure" cx="185" cy="504" rx="20" ry="12"/>
+          ${hotspots}
+        </svg>
+      </div>
+      <div class="body3d-wrap" id="bodyWrap3d" style="display:${bodyViewMode==='3d'?'flex':'none'};">
+        <div id="body3dSlot"></div>
+      </div>
+      <div class="body-col-right">
+        <div class="body-intro">
+          <h2>Tocá una zona del cuerpo</h2>
+          <p>Lesiones frecuentes, cómo evaluarlas, estadísticas, tiempos de evolución, protocolos, tus casos y papers.</p>
+        </div>
+        <div class="body-mode-toggle">
+          <button class="${bodyViewMode==='2d'?'on':''}" onclick="setBodyMode('2d')">Vista 2D</button>
+          <button class="${bodyViewMode==='3d'?'on':''}" onclick="setBodyMode('3d')">Vista 3D 🔄</button>
+        </div>
+        ${bodyViewMode==='3d'?'<p class="body3d-hint">Arrastrá para rotar · tocá una zona naranja</p>':''}
+        <div class="zonas-legend">${legend}</div>
+      </div>
     </div>
-    <div class="body-mode-toggle">
-      <button class="${bodyViewMode==='2d'?'on':''}" onclick="setBodyMode('2d')">Vista 2D</button>
-      <button class="${bodyViewMode==='3d'?'on':''}" onclick="setBodyMode('3d')">Vista 3D 🔄</button>
-    </div>
-    <div class="body-wrap" id="bodyWrap2d" style="display:${bodyViewMode==='2d'?'flex':'none'};">
-      <svg viewBox="0 0 300 560" fill="none">
-        <defs>
-          <linearGradient id="bodyGrad" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0%" stop-color="#F0F3F8"/>
-            <stop offset="100%" stop-color="#D2DAE6"/>
-          </linearGradient>
-          <linearGradient id="limbGrad" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0%" stop-color="#C7D0DE"/>
-            <stop offset="100%" stop-color="#AAB6C9"/>
-          </linearGradient>
-          <filter id="bodyShadow" x="-30%" y="-30%" width="160%" height="160%">
-            <feDropShadow dx="0" dy="2" stdDeviation="2.5" flood-color="#1B2A4A" flood-opacity="0.18"/>
-          </filter>
-        </defs>
-        <!-- Cabeza y cuello -->
-        <ellipse class="body-figure" cx="150" cy="48" rx="25" ry="29"/>
-        <rect class="body-figure" x="139" y="73" width="22" height="18" rx="7"/>
-        <!-- Torso -->
-        <path class="body-figure" d="M94,99 Q150,86 206,99 L217,178 Q220,216 202,232 L182,244 Q150,254 118,244 L98,232 Q80,216 83,178 Z"/>
-        <!-- Pelvis -->
-        <path class="body-figure" d="M118,240 L182,240 L198,266 Q150,280 102,266 Z"/>
-        <!-- Brazos (superior + antebrazo, trazo grueso con punta redonda) -->
-        <path class="body-limb" d="M98,112 L64,168" stroke-width="26"/>
-        <path class="body-limb" d="M64,168 L58,236" stroke-width="20"/>
-        <path class="body-limb" d="M202,112 L236,168" stroke-width="26"/>
-        <path class="body-limb" d="M236,168 L242,236" stroke-width="20"/>
-        <ellipse class="body-figure" cx="56" cy="256" rx="13" ry="17"/>
-        <ellipse class="body-figure" cx="244" cy="256" rx="13" ry="17"/>
-        <!-- Piernas (muslo + pantorrilla) -->
-        <path class="body-limb" d="M126,270 L122,368" stroke-width="34"/>
-        <path class="body-limb" d="M122,368 L118,486" stroke-width="24"/>
-        <path class="body-limb" d="M174,270 L178,368" stroke-width="34"/>
-        <path class="body-limb" d="M178,368 L182,486" stroke-width="24"/>
-        <ellipse class="body-figure" cx="116" cy="504" rx="19" ry="12"/>
-        <ellipse class="body-figure" cx="184" cy="504" rx="19" ry="12"/>
-        ${hotspots}
-      </svg>
-    </div>
-    <div class="body3d-wrap" id="bodyWrap3d" style="display:${bodyViewMode==='3d'?'flex':'none'};">
-      <div id="body3dSlot"></div>
-    </div>
-    ${bodyViewMode==='3d'?'<p class="body3d-hint">Arrastrá para rotar · tocá una zona naranja</p>':''}
-    <div class="zonas-legend">${legend}</div>
   `;
 
   if(bodyViewMode==='3d'){
@@ -657,7 +675,6 @@ function renderZonaView(){
         <button class="${viewMode==='compact'?'on':''}" onclick="setViewMode('compact')">Acotada</button>
         <button class="${viewMode==='full'?'on':''}" onclick="setViewMode('full')">Completa</button>
       </div>
-      <button class="btn-add-lesion" onclick="addLesion()">+ Agregar lesión / patología</button>
     </div>
     <div class="lesion-list ${viewMode==='compact'?'compact':''}">${cardsHtml}</div>
   `;
@@ -668,29 +685,18 @@ function setViewMode(mode){ viewMode=mode; renderZonaView(); }
 function buildLesionCard(l){
   const open=openLesionIds.has(l.id);
   const RO = editMode ? '' : 'readonly';
-  const evalHtml=(l.evaluacion||[]).map((e,i)=>`
-    <div class="sub-item">
-      <button class="si-del" onclick="removeSubItem('${l.id}','evaluacion',${i})" title="Eliminar">×</button>
-      <input class="si-title" value="${esc(e.nombre)}" ${RO} placeholder="Nombre del test (ej. Lachman)" oninput="updateSubItem('${l.id}','evaluacion',${i},'nombre',this.value)">
-      <textarea class="si-body full-only" ${RO} placeholder="Cómo se hace y qué indica un resultado positivo…" oninput="updateSubItem('${l.id}','evaluacion',${i},'detalle',this.value)">${esc(e.detalle)}</textarea>
+
+  const evalHtml=(l.evaluacion||[]).map(e=>`
+    <li><b>${esc(e.nombre)}</b><span class="compact-hide"> — ${esc(e.detalle)}</span></li>`).join('');
+
+  const evolHtml=(l.evolucion||[]).map(ph=>`
+    <div class="phase-row">
+      <span class="phase-chip">${esc(ph.tiempo)}</span>
+      <div><b>${esc(ph.fase)}</b><span class="compact-hide"> — ${esc(ph.descripcion)}</span></div>
     </div>`).join('');
 
-  const evolHtml=(l.evolucion||[]).map((ph,i)=>`
-    <div class="phase-item">
-      <button class="si-del" onclick="removeSubItem('${l.id}','evolucion',${i})" title="Eliminar">×</button>
-      <div class="phase-time"><input value="${esc(ph.tiempo)}" ${RO} placeholder="0-2 sem" oninput="updateSubItem('${l.id}','evolucion',${i},'tiempo',this.value)"></div>
-      <div class="phase-body">
-        <input class="si-title" value="${esc(ph.fase)}" ${RO} placeholder="Nombre de la fase" oninput="updateSubItem('${l.id}','evolucion',${i},'fase',this.value)">
-        <textarea class="si-body full-only" ${RO} placeholder="Objetivos, hitos, criterios de progresión…" oninput="updateSubItem('${l.id}','evolucion',${i},'descripcion',this.value)">${esc(ph.descripcion)}</textarea>
-      </div>
-    </div>`).join('');
-
-  const protoHtml=(l.protocolos||[]).map((pr,i)=>`
-    <div class="sub-item">
-      <button class="si-del" onclick="removeSubItem('${l.id}','protocolos',${i})" title="Eliminar">×</button>
-      <input class="si-title" value="${esc(pr.nombre)}" ${RO} placeholder="Nombre del protocolo" oninput="updateSubItem('${l.id}','protocolos',${i},'nombre',this.value)">
-      <textarea class="si-body" ${RO} placeholder="Pasos, series/reps, progresión, criterios…" oninput="updateSubItem('${l.id}','protocolos',${i},'contenido',this.value)">${esc(pr.contenido)}</textarea>
-    </div>`).join('');
+  const protoHtml=(l.protocolos||[]).map(pr=>`
+    <li><b>${esc(pr.nombre)}</b> — ${esc(pr.contenido)}</li>`).join('') || '<li class="ref-empty">Sin protocolos cargados todavía.</li>';
 
   const papersHtml=(l.papers||[]).map((pp,i)=>`
     <div class="sub-item">
@@ -699,62 +705,52 @@ function buildLesionCard(l){
       <input class="si-meta" value="${esc(pp.autorAnio)}" ${RO} placeholder="Autor, año" oninput="updateSubItem('${l.id}','papers',${i},'autorAnio',this.value)">
       <input class="si-meta" value="${esc(pp.link)}" ${RO} placeholder="Link (opcional)" oninput="updateSubItem('${l.id}','papers',${i},'link',this.value)">
       <textarea class="si-body" ${RO} placeholder="Resumen / conclusión clave…" oninput="updateSubItem('${l.id}','papers',${i},'resumen',this.value)">${esc(pp.resumen)}</textarea>
-    </div>`).join('');
+    </div>`).join('') || '<div class="ref-empty">Sin papers cargados todavía.</div>';
 
   const expHtml=(l.experiencias||[]).map((ex,i)=>`
     <div class="sub-item">
       <button class="si-del" onclick="removeSubItem('${l.id}','experiencias',${i})" title="Eliminar">×</button>
       <input type="date" class="si-date" value="${esc(ex.fecha)}" ${RO} onchange="updateSubItem('${l.id}','experiencias',${i},'fecha',this.value)" style="border:none;background:transparent;color:var(--text-3);font-family:Inter,sans-serif;">
       <textarea class="si-body" ${RO} placeholder="Qué viste, qué funcionó, qué no…" oninput="updateSubItem('${l.id}','experiencias',${i},'texto',this.value)">${esc(ex.texto)}</textarea>
-    </div>`).join('');
+    </div>`).join('') || '<div class="ref-empty">Sin experiencias cargadas todavía.</div>';
 
   return `
   <div class="lesion-card ${open?'open':''}" id="lc_${l.id}">
     <div class="lesion-head" onclick="toggleLesion('${l.id}')">
-      <input value="${esc(l.nombre)}" placeholder="Nombre de la lesión" ${RO} onclick="event.stopPropagation()" oninput="updateLesionField('${l.id}','nombre',this.value)">
+      <div class="lesion-title-block">
+        <h3>${esc(l.nombre)}</h3>
+      </div>
       <span class="lesion-chevron">▾</span>
     </div>
     ${l.resumen?`<div class="resumen-text">${esc(l.resumen)}</div>`:''}
     <div class="lesion-body">
-      <div class="lesion-field">
-        <label>Resumen corto</label>
-        <textarea placeholder="1-2 líneas para la vista acotada…" ${RO} oninput="updateLesionField('${l.id}','resumen',this.value)" style="min-height:38px;">${esc(l.resumen)}</textarea>
+      <p class="ref-text">${esc(l.descripcion)}</p>
+      <div class="ref-block full-only">
+        <div class="sub-section-title">📊 Epidemiología y contexto</div>
+        <p class="ref-text">${esc(l.estadisticas)}</p>
       </div>
-      <div class="lesion-field">
-        <label>Descripción</label>
-        <textarea ${RO} placeholder="Qué es, mecanismo de lesión, presentación clínica típica…" oninput="updateLesionField('${l.id}','descripcion',this.value)">${esc(l.descripcion)}</textarea>
-      </div>
-      <div class="lesion-field full-only">
-        <label>Estadísticas / epidemiología</label>
-        <textarea ${RO} placeholder="Incidencia, prevalencia, factores de riesgo…" oninput="updateLesionField('${l.id}','estadisticas',this.value)">${esc(l.estadisticas)}</textarea>
-      </div>
-      <div class="lesion-field">
+      <div class="ref-block">
         <div class="sub-section-title">🔍 Cómo evaluarla</div>
-        ${evalHtml}
-        <button class="btn-add-sub" onclick="addSubItem('${l.id}','evaluacion',{nombre:'',detalle:''})">+ Agregar test</button>
+        <ul class="ref-list">${evalHtml}</ul>
       </div>
-      <div class="lesion-field">
+      <div class="ref-block">
         <div class="sub-section-title">⏱ Tiempos de evolución</div>
         ${evolHtml}
-        <button class="btn-add-sub" onclick="addSubItem('${l.id}','evolucion',{fase:'',tiempo:'',descripcion:''})">+ Agregar fase</button>
       </div>
-      <div class="lesion-field full-only">
+      <div class="ref-block full-only">
         <div class="sub-section-title">🗂 Protocolos</div>
-        ${protoHtml}
-        <button class="btn-add-sub" onclick="addSubItem('${l.id}','protocolos',{nombre:'',contenido:''})">+ Agregar protocolo</button>
+        <ul class="ref-list">${protoHtml}</ul>
       </div>
-      <div class="lesion-field full-only">
+      <hr class="notes-divider full-only">
+      <div class="ref-block full-only edit-only">
         <div class="sub-section-title">📝 Mis experiencias</div>
         ${expHtml}
         <button class="btn-add-sub" onclick="addSubItem('${l.id}','experiencias',{fecha:new Date().toISOString().slice(0,10),texto:''})">+ Agregar experiencia</button>
       </div>
-      <div class="lesion-field full-only">
+      <div class="ref-block full-only edit-only">
         <div class="sub-section-title">📄 Papers / referencias</div>
         ${papersHtml}
         <button class="btn-add-sub" onclick="addSubItem('${l.id}','papers',{titulo:'',autorAnio:'',link:'',resumen:''})">+ Agregar paper</button>
-      </div>
-      <div class="lesion-actions">
-        <button class="btn-del-lesion" onclick="deleteLesion('${l.id}')">Eliminar lesión</button>
       </div>
     </div>
   </div>`;
@@ -766,28 +762,6 @@ function toggleLesion(id){
   if(el) el.classList.toggle('open', openLesionIds.has(id));
 }
 
-function addLesion(){
-  const z=getZonaData(currentZona);
-  const id=uid();
-  z.lesiones.push({id, nombre:'', resumen:'', descripcion:'', estadisticas:'', evaluacion:[], evolucion:[], protocolos:[], experiencias:[], papers:[]});
-  openLesionIds.add(id);
-  saveDB();
-  renderZonaView();
-  setTimeout(()=>{ const el=document.getElementById('lc_'+id); if(el) el.scrollIntoView({behavior:'smooth',block:'center'}); },50);
-}
-function deleteLesion(id){
-  if(!confirm('¿Eliminar esta lesión y todo lo cargado (evaluación, casos, papers)?')) return;
-  const z=getZonaData(currentZona);
-  z.lesiones=z.lesiones.filter(l=>l.id!==id);
-  saveDB();
-  renderZonaView();
-}
-function updateLesionField(id,field,val){
-  const z=getZonaData(currentZona);
-  const l=z.lesiones.find(x=>x.id===id); if(!l) return;
-  l[field]=val;
-  debSave();
-}
 function addSubItem(lesionId,key,item){
   const z=getZonaData(currentZona);
   const l=z.lesiones.find(x=>x.id===lesionId); if(!l) return;
