@@ -80,23 +80,19 @@ button{cursor:pointer;}
   .body-screen .body-wrap{flex-shrink:0;padding:0;}
   .body-screen .body-wrap svg{max-width:300px;}
   .body-screen .body-col-right{flex:1;min-width:0;}
-  .body-screen .body-mode-toggle{justify-content:flex-start;}
   .body-screen .zonas-legend{justify-content:flex-start;margin-top:16px;}
 }
 @media (min-width:680px) and (orientation:portrait){
   .lesion-list{grid-template-columns:1fr;}
   .body-screen{flex-direction:column;text-align:center;gap:6px;}
   .body-screen .body-intro{text-align:center;}
-  .body-screen .body-mode-toggle,.body-screen .zonas-legend{justify-content:center;}
+  .body-screen .zonas-legend{justify-content:center;}
 }
 
 /* ── VISTA CUERPO ── */
 .body-intro{text-align:center;margin-bottom:6px;}
 .body-intro h2{font-size:16px;color:var(--navy);margin-bottom:4px;}
 .body-intro p{font-size:12.5px;color:var(--text-2);line-height:1.5;max-width:320px;margin:0 auto;}
-.body-mode-toggle{display:flex;justify-content:center;gap:8px;margin:12px 0 2px;}
-.body-mode-toggle button{border:1px solid var(--border);background:#fff;color:var(--text-2);font-size:12px;font-weight:600;padding:7px 14px;border-radius:20px;font-family:Inter,sans-serif;}
-.body-mode-toggle button.on{background:var(--navy);color:#fff;border-color:var(--navy);}
 .body-wrap{display:flex;justify-content:center;padding:10px 0 6px;}
 .body-wrap svg{width:100%;max-width:280px;height:auto;}
 .body-figure{fill:url(#bodyGrad);stroke:var(--navy);stroke-width:2;stroke-linejoin:round;filter:url(#bodyShadow);}
@@ -157,15 +153,13 @@ button{cursor:pointer;}
 .lesion-card.open .resumen-text{display:none;}
 .lesion-list.compact .full-only{display:none;}
 .lesion-list.compact .lesion-body{padding-bottom:10px;}
-#app.locked .btn-add-sub,#app.locked .edit-only,#app.locked .si-del{display:none!important;}
-#app.locked input[readonly],#app.locked textarea[readonly]{color:var(--text);opacity:1;}
+.ref-label{display:block;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text-3);margin-bottom:5px;}
+.ref-edit{width:100%;border:1px solid var(--border);border-radius:var(--radius-sm);padding:9px 10px;font-size:13px;line-height:1.6;color:var(--text);outline:none;resize:none;overflow:hidden;font-family:Inter,sans-serif;background:var(--surface);}
+.ref-edit:focus{border-color:var(--navy);background:#fff;}
+.title-edit{flex:1;border:none;background:transparent;font-size:15px;font-weight:700;color:var(--navy);outline:none;font-family:Inter,sans-serif;}
+textarea.autogrow{resize:none;overflow:hidden;}
 .lock-hint{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text-3);background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:6px 12px;margin-bottom:12px;justify-content:center;}
 #app:not(.locked) .lock-hint{background:var(--orange-light);color:var(--orange);border-color:transparent;}
-
-/* ── VISTA 3D ── */
-.body3d-wrap{display:flex;justify-content:center;padding:6px 0;}
-#body3dCanvas{width:100%;max-width:340px;aspect-ratio:1/1.15;border-radius:var(--radius);touch-action:none;background:radial-gradient(circle at 50% 30%,#F2F5F9,#E4E9F1);}
-.body3d-hint{text-align:center;font-size:11px;color:var(--text-3);margin-top:6px;}
 @supports(padding:max(0px)){.panel{padding-bottom:max(40px,env(safe-area-inset-bottom));}}
 
 /* ── TOAST ── */
@@ -199,7 +193,6 @@ button{cursor:pointer;}
 </div>
 
 <div class="toast" id="toast"></div>
-<canvas id="body3dCanvas" style="display:none;"></canvas>
 
 <script>
 // ══════════════════ ESTADO / UTILS ══════════════════
@@ -548,8 +541,6 @@ function applyEditModeUI(){
 function goHome(){ currentZona=null; render(); }
 
 // ══════════════════ VISTA: CUERPO ══════════════════
-let bodyViewMode = '2d'; // '2d' | '3d'
-
 function renderBodyView(){
   document.getElementById('btnBack').style.display='none';
   document.getElementById('topTitle').textContent='Atlas Clínico';
@@ -566,7 +557,7 @@ function renderBodyView(){
 
   document.getElementById('panel').innerHTML=`
     <div class="body-screen">
-      <div class="body-wrap" id="bodyWrap2d" style="display:${bodyViewMode==='2d'?'flex':'none'};">
+      <div class="body-wrap">
         <svg viewBox="0 0 300 560" fill="none">
           <defs>
             <linearGradient id="bodyGrad" x1="0" y1="0" x2="1" y2="1">
@@ -607,44 +598,15 @@ function renderBodyView(){
           ${hotspots}
         </svg>
       </div>
-      <div class="body3d-wrap" id="bodyWrap3d" style="display:${bodyViewMode==='3d'?'flex':'none'};">
-        <div id="body3dSlot"></div>
-      </div>
       <div class="body-col-right">
         <div class="body-intro">
           <h2>Tocá una zona del cuerpo</h2>
-          <p>Lesiones frecuentes, cómo evaluarlas, estadísticas, tiempos de evolución, protocolos, tus casos y papers.</p>
+          <p>Lesiones frecuentes, cómo evaluarlas, epidemiología, tiempos de evolución, manejo, tus casos y papers.</p>
         </div>
-        <div class="body-mode-toggle">
-          <button class="${bodyViewMode==='2d'?'on':''}" onclick="setBodyMode('2d')">Vista 2D</button>
-          <button class="${bodyViewMode==='3d'?'on':''}" onclick="setBodyMode('3d')">Vista 3D 🔄</button>
-        </div>
-        ${bodyViewMode==='3d'?'<p class="body3d-hint">Arrastrá para rotar · tocá una zona naranja</p>':''}
         <div class="zonas-legend">${legend}</div>
       </div>
     </div>
   `;
-
-  if(bodyViewMode==='3d'){
-    const slot=document.getElementById('body3dSlot');
-    const canvas=document.getElementById('body3dCanvas');
-    slot.appendChild(canvas);
-    canvas.style.display='block';
-    init3D().catch(err=>{
-      console.error(err);
-      showToast('No se pudo cargar la vista 3D, volviendo a 2D');
-      setBodyMode('2d');
-    });
-  } else {
-    stop3DLoop();
-    const canvas=document.getElementById('body3dCanvas');
-    canvas.style.display='none';
-  }
-}
-
-function setBodyMode(mode){
-  bodyViewMode=mode;
-  renderBodyView();
 }
 
 function openZona(zonaId){ currentZona=zonaId; openLesionIds=new Set(); render(); }
@@ -659,7 +621,7 @@ function getZonaData(zonaId){
 function renderZonaView(){
   document.getElementById('btnBack').style.display='inline-block';
   document.getElementById('topTitle').textContent=ZONA_LABELS[currentZona]||'Zona';
-  document.getElementById('topSub').textContent='Lesiones, evaluación, evolución, protocolos, casos y papers';
+  document.getElementById('topSub').textContent='Lesiones, evaluación, evolución, manejo, casos y papers';
 
   const z=getZonaData(currentZona);
   const q=(document.getElementById('zonaSearchInput')?document.getElementById('zonaSearchInput').value:'').toLowerCase();
@@ -675,85 +637,134 @@ function renderZonaView(){
         <button class="${viewMode==='compact'?'on':''}" onclick="setViewMode('compact')">Acotada</button>
         <button class="${viewMode==='full'?'on':''}" onclick="setViewMode('full')">Completa</button>
       </div>
+      ${editMode?'<div class="lock-hint">✎ Edición activada — el candado de arriba vuelve a modo lectura</div>':''}
     </div>
     <div class="lesion-list ${viewMode==='compact'?'compact':''}">${cardsHtml}</div>
   `;
+  autoGrowAll();
 }
 
 function setViewMode(mode){ viewMode=mode; renderZonaView(); }
 
 function buildLesionCard(l){
   const open=openLesionIds.has(l.id);
-  const RO = editMode ? '' : 'readonly';
 
-  const evalHtml=(l.evaluacion||[]).map(e=>`
+  // Texto de referencia (nombre/resumen/descripción/estadísticas): se ve como
+  // párrafo normal; con el candado abierto se convierte en textarea que crece
+  // solo, sin achicar la caja ni obligar a scrollear adentro.
+  const refField=(field,val,ph,extraClass)=>editMode
+    ? `<textarea class="ref-edit ${extraClass||''}" placeholder="${ph}" oninput="autoGrow(this);updateLesionField('${l.id}','${field}',this.value)">${esc(val)}</textarea>`
+    : `<p class="ref-text ${extraClass||''}">${esc(val)||'<span class="ref-empty">(vacío)</span>'}</p>`;
+
+  const evalHtml=(l.evaluacion||[]).map((e,i)=> editMode ? `
+    <div class="sub-item">
+      <button class="si-del" onclick="removeSubItem('${l.id}','evaluacion',${i})" title="Eliminar">×</button>
+      <input class="si-title" value="${esc(e.nombre)}" placeholder="Nombre del test" oninput="updateSubItem('${l.id}','evaluacion',${i},'nombre',this.value)">
+      <textarea class="si-body autogrow" placeholder="Cómo se hace y qué indica un resultado positivo…" oninput="autoGrow(this);updateSubItem('${l.id}','evaluacion',${i},'detalle',this.value)">${esc(e.detalle)}</textarea>
+    </div>` : `
     <li><b>${esc(e.nombre)}</b><span class="compact-hide"> — ${esc(e.detalle)}</span></li>`).join('');
 
-  const evolHtml=(l.evolucion||[]).map(ph=>`
+  const evolHtml=(l.evolucion||[]).map((ph,i)=> editMode ? `
+    <div class="sub-item">
+      <button class="si-del" onclick="removeSubItem('${l.id}','evolucion',${i})" title="Eliminar">×</button>
+      <input class="si-meta" value="${esc(ph.tiempo)}" placeholder="Tiempo (ej. 0-2 sem)" oninput="updateSubItem('${l.id}','evolucion',${i},'tiempo',this.value)">
+      <input class="si-title" value="${esc(ph.fase)}" placeholder="Nombre de la fase" oninput="updateSubItem('${l.id}','evolucion',${i},'fase',this.value)">
+      <textarea class="si-body autogrow" placeholder="Objetivos, hitos, criterios de progresión…" oninput="autoGrow(this);updateSubItem('${l.id}','evolucion',${i},'descripcion',this.value)">${esc(ph.descripcion)}</textarea>
+    </div>` : `
     <div class="phase-row">
       <span class="phase-chip">${esc(ph.tiempo)}</span>
       <div><b>${esc(ph.fase)}</b><span class="compact-hide"> — ${esc(ph.descripcion)}</span></div>
     </div>`).join('');
 
-  const protoHtml=(l.protocolos||[]).map(pr=>`
-    <li><b>${esc(pr.nombre)}</b> — ${esc(pr.contenido)}</li>`).join('') || '<li class="ref-empty">Sin protocolos cargados todavía.</li>';
+  const protoHtml=(l.protocolos||[]).map((pr,i)=> editMode ? `
+    <div class="sub-item">
+      <button class="si-del" onclick="removeSubItem('${l.id}','protocolos',${i})" title="Eliminar">×</button>
+      <input class="si-title" value="${esc(pr.nombre)}" placeholder="Nombre del protocolo" oninput="updateSubItem('${l.id}','protocolos',${i},'nombre',this.value)">
+      <textarea class="si-body autogrow" placeholder="Pasos, series/reps, progresión, criterios…" oninput="autoGrow(this);updateSubItem('${l.id}','protocolos',${i},'contenido',this.value)">${esc(pr.contenido)}</textarea>
+    </div>` : `
+    <li><b>${esc(pr.nombre)}</b> — ${esc(pr.contenido)}</li>`).join('') ||
+    (editMode ? '' : '<li class="ref-empty">Sin protocolos cargados todavía.</li>');
 
+  // Experiencias y papers: siempre editables (no dependen del candado), es tu
+  // cuaderno de notas de uso diario.
   const papersHtml=(l.papers||[]).map((pp,i)=>`
     <div class="sub-item">
       <button class="si-del" onclick="removeSubItem('${l.id}','papers',${i})" title="Eliminar">×</button>
-      <input class="si-title" value="${esc(pp.titulo)}" ${RO} placeholder="Título del paper" oninput="updateSubItem('${l.id}','papers',${i},'titulo',this.value)">
-      <input class="si-meta" value="${esc(pp.autorAnio)}" ${RO} placeholder="Autor, año" oninput="updateSubItem('${l.id}','papers',${i},'autorAnio',this.value)">
-      <input class="si-meta" value="${esc(pp.link)}" ${RO} placeholder="Link (opcional)" oninput="updateSubItem('${l.id}','papers',${i},'link',this.value)">
-      <textarea class="si-body" ${RO} placeholder="Resumen / conclusión clave…" oninput="updateSubItem('${l.id}','papers',${i},'resumen',this.value)">${esc(pp.resumen)}</textarea>
-    </div>`).join('') || '<div class="ref-empty">Sin papers cargados todavía.</div>';
+      <input class="si-title" value="${esc(pp.titulo)}" placeholder="Título del paper" oninput="updateSubItem('${l.id}','papers',${i},'titulo',this.value)">
+      <input class="si-meta" value="${esc(pp.autorAnio)}" placeholder="Autor, año" oninput="updateSubItem('${l.id}','papers',${i},'autorAnio',this.value)">
+      <input class="si-meta" value="${esc(pp.link)}" placeholder="Link (opcional)" oninput="updateSubItem('${l.id}','papers',${i},'link',this.value)">
+      <textarea class="si-body autogrow" placeholder="Resumen / conclusión clave…" oninput="autoGrow(this);updateSubItem('${l.id}','papers',${i},'resumen',this.value)">${esc(pp.resumen)}</textarea>
+    </div>`).join('') || '<div class="ref-empty">Sin papers cargados todavía. Tocá "+ Agregar paper" para sumar el primero.</div>';
 
   const expHtml=(l.experiencias||[]).map((ex,i)=>`
     <div class="sub-item">
       <button class="si-del" onclick="removeSubItem('${l.id}','experiencias',${i})" title="Eliminar">×</button>
-      <input type="date" class="si-date" value="${esc(ex.fecha)}" ${RO} onchange="updateSubItem('${l.id}','experiencias',${i},'fecha',this.value)" style="border:none;background:transparent;color:var(--text-3);font-family:Inter,sans-serif;">
-      <textarea class="si-body" ${RO} placeholder="Qué viste, qué funcionó, qué no…" oninput="updateSubItem('${l.id}','experiencias',${i},'texto',this.value)">${esc(ex.texto)}</textarea>
-    </div>`).join('') || '<div class="ref-empty">Sin experiencias cargadas todavía.</div>';
+      <input type="date" class="si-date" value="${esc(ex.fecha)}" onchange="updateSubItem('${l.id}','experiencias',${i},'fecha',this.value)" style="border:none;background:transparent;color:var(--text-3);font-family:Inter,sans-serif;">
+      <textarea class="si-body autogrow" placeholder="Qué viste, qué funcionó, qué no…" oninput="autoGrow(this);updateSubItem('${l.id}','experiencias',${i},'texto',this.value)">${esc(ex.texto)}</textarea>
+    </div>`).join('') || '<div class="ref-empty">Sin experiencias cargadas todavía. Tocá "+ Agregar experiencia" para sumar la primera.</div>';
 
   return `
   <div class="lesion-card ${open?'open':''}" id="lc_${l.id}">
     <div class="lesion-head" onclick="toggleLesion('${l.id}')">
       <div class="lesion-title-block">
-        <h3>${esc(l.nombre)}</h3>
+        ${editMode
+          ? `<input class="title-edit" value="${esc(l.nombre)}" placeholder="Nombre de la lesión" onclick="event.stopPropagation()" oninput="updateLesionField('${l.id}','nombre',this.value)">`
+          : `<h3>${esc(l.nombre)}</h3>`}
       </div>
       <span class="lesion-chevron">▾</span>
     </div>
-    ${l.resumen?`<div class="resumen-text">${esc(l.resumen)}</div>`:''}
+    ${(!editMode && l.resumen)?`<div class="resumen-text">${esc(l.resumen)}</div>`:''}
     <div class="lesion-body">
-      <p class="ref-text">${esc(l.descripcion)}</p>
+      ${editMode?`<div class="ref-block"><label class="ref-label">Resumen corto (vista acotada)</label>${refField('resumen',l.resumen,'1-2 líneas…')}</div>`:''}
+      <div class="ref-block">
+        ${editMode?'<label class="ref-label">Descripción</label>':''}
+        ${refField('descripcion',l.descripcion,'Qué es, mecanismo de lesión, presentación clínica…')}
+      </div>
       <div class="ref-block full-only">
         <div class="sub-section-title">📊 Epidemiología y contexto</div>
-        <p class="ref-text">${esc(l.estadisticas)}</p>
+        ${refField('estadisticas',l.estadisticas,'Incidencia, prevalencia, factores de riesgo…')}
       </div>
       <div class="ref-block">
         <div class="sub-section-title">🔍 Cómo evaluarla</div>
-        <ul class="ref-list">${evalHtml}</ul>
+        ${editMode?`<div>${evalHtml}</div><button class="btn-add-sub" onclick="addSubItem('${l.id}','evaluacion',{nombre:'',detalle:''})">+ Agregar test</button>`:`<ul class="ref-list">${evalHtml}</ul>`}
       </div>
       <div class="ref-block">
         <div class="sub-section-title">⏱ Tiempos de evolución</div>
         ${evolHtml}
+        ${editMode?`<button class="btn-add-sub" onclick="addSubItem('${l.id}','evolucion',{fase:'',tiempo:'',descripcion:''})">+ Agregar fase</button>`:''}
       </div>
       <div class="ref-block full-only">
-        <div class="sub-section-title">🗂 Protocolos</div>
-        <ul class="ref-list">${protoHtml}</ul>
+        <div class="sub-section-title">🗂 Manejo y protocolos</div>
+        ${editMode?`<div>${protoHtml}</div><button class="btn-add-sub" onclick="addSubItem('${l.id}','protocolos',{nombre:'',contenido:''})">+ Agregar protocolo</button>`:`<ul class="ref-list">${protoHtml}</ul>`}
       </div>
       <hr class="notes-divider full-only">
-      <div class="ref-block full-only edit-only">
+      <div class="ref-block full-only">
         <div class="sub-section-title">📝 Mis experiencias</div>
         ${expHtml}
         <button class="btn-add-sub" onclick="addSubItem('${l.id}','experiencias',{fecha:new Date().toISOString().slice(0,10),texto:''})">+ Agregar experiencia</button>
       </div>
-      <div class="ref-block full-only edit-only">
+      <div class="ref-block full-only">
         <div class="sub-section-title">📄 Papers / referencias</div>
         ${papersHtml}
         <button class="btn-add-sub" onclick="addSubItem('${l.id}','papers',{titulo:'',autorAnio:'',link:'',resumen:''})">+ Agregar paper</button>
       </div>
     </div>
   </div>`;
+}
+
+function updateLesionField(id,field,val){
+  const z=getZonaData(currentZona);
+  const l=z.lesiones.find(x=>x.id===id); if(!l) return;
+  l[field]=val;
+  debSave();
+}
+
+function autoGrow(el){
+  el.style.height='auto';
+  el.style.height=(el.scrollHeight+2)+'px';
+}
+function autoGrowAll(){
+  document.querySelectorAll('.autogrow, .ref-edit').forEach(autoGrow);
 }
 
 function toggleLesion(id){
@@ -783,191 +794,6 @@ function updateSubItem(lesionId,key,idx,field,val){
   l[key][idx][field]=val;
   debSave();
 }
-
-// ══════════════════ VISTA 3D (Three.js) ══════════════════
-// Modelo simple armado con primitivas (esferas/cilindros) posicionadas según
-// los mismos puntos anatómicos del diagrama 2D — no es un atlas anatómico
-// detallado, pero permite rotar y tocar zonas como referencia visual rápida.
-let three3D = null; // {renderer, scene, camera, group, hotspots, animId}
-let threeLoadPromise = null;
-
-function loadThreeScript(){
-  if(window.THREE) return Promise.resolve();
-  if(threeLoadPromise) return threeLoadPromise;
-  threeLoadPromise = new Promise((resolve,reject)=>{
-    const s=document.createElement('script');
-    s.src='https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js';
-    s.onload=()=>resolve();
-    s.onerror=()=>reject(new Error('No se pudo cargar Three.js (¿sin conexión?)'));
-    document.head.appendChild(s);
-  });
-  return threeLoadPromise;
-}
-
-// Convierte un punto del sistema de coordenadas del SVG 2D (0-300, 0-560) a
-// coordenadas 3D (x derecha, y arriba, z=0 — pose frontal en reposo).
-function p3(x,y){ return {x:(x-150)*0.045, y:(280-y)*0.045, z:0}; }
-
-async function init3D(){
-  await loadThreeScript();
-  const THREE=window.THREE;
-  const canvas=document.getElementById('body3dCanvas');
-
-  if(!three3D){
-    const scene=new THREE.Scene();
-    const camera=new THREE.PerspectiveCamera(40, 1, 0.1, 100);
-    camera.position.set(0,0,22);
-    let renderer;
-    try{
-      renderer=new THREE.WebGLRenderer({canvas, antialias:true, alpha:true});
-    } catch(e){
-      throw new Error('WebGL no disponible en este navegador');
-    }
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,2));
-
-    scene.add(new THREE.AmbientLight(0xffffff,0.75));
-    const dir=new THREE.DirectionalLight(0xffffff,0.6);
-    dir.position.set(3,6,8);
-    scene.add(dir);
-
-    const group=new THREE.Group();
-    scene.add(group);
-
-    const skinMat=new THREE.MeshStandardMaterial({color:0xE4E9F1, roughness:0.6, metalness:0.05});
-    const limbMat=new THREE.MeshStandardMaterial({color:0xC7D0DE, roughness:0.6, metalness:0.05});
-
-    function sphereAt(pt,r,mat){
-      const m=new THREE.Mesh(new THREE.SphereGeometry(r,20,16),mat);
-      m.position.set(pt.x,pt.y,pt.z);
-      group.add(m);
-      return m;
-    }
-    function cylBetween(p1,p2,rTop,rBottom,mat){
-      const a=new THREE.Vector3(p1.x,p1.y,p1.z), b=new THREE.Vector3(p2.x,p2.y,p2.z);
-      const dir=new THREE.Vector3().subVectors(b,a);
-      const len=dir.length();
-      const geo=new THREE.CylinderGeometry(rTop,rBottom,len,16,1);
-      const m=new THREE.Mesh(geo,mat);
-      const mid=new THREE.Vector3().addVectors(a,b).multiplyScalar(0.5);
-      m.position.copy(mid);
-      m.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0), dir.clone().normalize());
-      group.add(m);
-      return m;
-    }
-
-    // Puntos anatómicos (mismos que el diagrama 2D)
-    const P={
-      head:p3(150,48), neck:p3(150,80), shoulderL:p3(100,112), shoulderR:p3(200,112),
-      elbowL:p3(65,168), elbowR:p3(235,168), wristL:p3(58,236), wristR:p3(242,236),
-      chest:p3(150,140), waist:p3(150,232), hipL:p3(126,270), hipR:p3(174,270),
-      kneeL:p3(122,368), kneeR:p3(178,368), ankleL:p3(118,486), ankleR:p3(182,486)
-    };
-
-    sphereAt(P.head,1.35,skinMat);
-    cylBetween(P.neck,P.chest,0.55,1.9,skinMat); // torso superior (hombros)
-    cylBetween(P.chest,P.waist,1.9,1.45,skinMat); // torso inferior (a la cintura)
-    cylBetween(P.waist,{x:0,y:P.hipL.y-0.3,z:0},1.9,2.3,skinMat); // pelvis
-    // Brazos
-    cylBetween(P.shoulderL,P.elbowL,0.65,0.5,limbMat);
-    cylBetween(P.elbowL,P.wristL,0.5,0.4,limbMat);
-    cylBetween(P.shoulderR,P.elbowR,0.65,0.5,limbMat);
-    cylBetween(P.elbowR,P.wristR,0.5,0.4,limbMat);
-    sphereAt(P.shoulderL,0.65,skinMat); sphereAt(P.elbowL,0.5,skinMat); sphereAt(P.wristL,0.42,skinMat);
-    sphereAt(P.shoulderR,0.65,skinMat); sphereAt(P.elbowR,0.5,skinMat); sphereAt(P.wristR,0.42,skinMat);
-    // Piernas
-    cylBetween(P.hipL,P.kneeL,0.85,0.6,limbMat);
-    cylBetween(P.kneeL,P.ankleL,0.6,0.42,limbMat);
-    cylBetween(P.hipR,P.kneeR,0.85,0.6,limbMat);
-    cylBetween(P.kneeR,P.ankleR,0.6,0.42,limbMat);
-    sphereAt(P.hipL,0.75,skinMat); sphereAt(P.kneeL,0.58,skinMat); sphereAt(P.ankleL,0.4,skinMat);
-    sphereAt(P.hipR,0.75,skinMat); sphereAt(P.kneeR,0.58,skinMat); sphereAt(P.ankleR,0.4,skinMat);
-
-    // Hotspots (esferas naranjas tocables, mismas zonas que el diagrama 2D)
-    const hotMat=new THREE.MeshStandardMaterial({color:0xE87722, roughness:0.4});
-    const lockMat=new THREE.MeshStandardMaterial({color:0xC7CCD6, roughness:0.6});
-    const hotspots=[];
-    const hotspotDefs=[
-      ['cuello',P.neck],['hombro',P.shoulderL],['hombro',P.shoulderR],
-      ['columna',{x:0,y:P.chest.y-0.5,z:1.1}],['codo',P.elbowL],['codo',P.elbowR],
-      ['cadera',{x:0,y:P.waist.y-0.7,z:0}],['muneca',P.wristL],['muneca',P.wristR],
-      ['rodilla',P.kneeL],['rodilla',P.kneeR],['tobillo',P.ankleL],['tobillo',P.ankleR]
-    ];
-    hotspotDefs.forEach(([zid,pt])=>{
-      const active=ZONAS.find(z=>z.id===zid)?.active;
-      const m=sphereAt(pt,0.42,active?hotMat:lockMat);
-      m.userData={zonaId:zid, active};
-      hotspots.push(m);
-    });
-
-    group.rotation.x=0.05;
-
-    three3D={renderer, scene, camera, group, hotspots, animId:null, dragging:false, lastX:0, lastY:0, totalDrag:0};
-
-    // Rotar arrastrando (mouse + touch vía pointer events)
-    canvas.addEventListener('pointerdown', e=>{
-      three3D.dragging=true; three3D.lastX=e.clientX; three3D.lastY=e.clientY; three3D.totalDrag=0;
-      canvas.setPointerCapture(e.pointerId);
-    });
-    canvas.addEventListener('pointermove', e=>{
-      if(!three3D.dragging) return;
-      const dx=e.clientX-three3D.lastX, dy=e.clientY-three3D.lastY;
-      three3D.group.rotation.y += dx*0.008;
-      three3D.group.rotation.x = Math.max(-0.6,Math.min(0.6, three3D.group.rotation.x + dy*0.005));
-      three3D.totalDrag += Math.abs(dx)+Math.abs(dy);
-      three3D.lastX=e.clientX; three3D.lastY=e.clientY;
-    });
-    canvas.addEventListener('pointerup', e=>{
-      three3D.dragging=false;
-      if(three3D.totalDrag<6){ handle3DTap(e); }
-    });
-  }
-
-  resize3D();
-  window.addEventListener('resize', resize3D);
-  start3DLoop();
-}
-
-function resize3D(){
-  if(!three3D) return;
-  const canvas=document.getElementById('body3dCanvas');
-  const w=canvas.clientWidth||300, h=canvas.clientHeight||340;
-  if(w===0||h===0) return;
-  three3D.renderer.setSize(w,h,false);
-  three3D.camera.aspect=w/h;
-  three3D.camera.updateProjectionMatrix();
-}
-
-function handle3DTap(e){
-  const THREE=window.THREE;
-  const canvas=document.getElementById('body3dCanvas');
-  const rect=canvas.getBoundingClientRect();
-  const mouse=new THREE.Vector2(
-    ((e.clientX-rect.left)/rect.width)*2-1,
-    -((e.clientY-rect.top)/rect.height)*2+1
-  );
-  const raycaster=new THREE.Raycaster();
-  raycaster.setFromCamera(mouse, three3D.camera);
-  const hits=raycaster.intersectObjects(three3D.hotspots);
-  if(hits.length){
-    const d=hits[0].object.userData;
-    if(d.active) openZona(d.zonaId); else showToast('Próximamente');
-  }
-}
-
-function start3DLoop(){
-  if(!three3D) return;
-  if(three3D.animId) return;
-  const loop=()=>{
-    if(bodyViewMode!=='3d'||!three3D){ three3D&&(three3D.animId=null); return; }
-    three3D.renderer.render(three3D.scene, three3D.camera);
-    three3D.animId=requestAnimationFrame(loop);
-  };
-  loop();
-}
-function stop3DLoop(){
-  if(three3D&&three3D.animId){ cancelAnimationFrame(three3D.animId); three3D.animId=null; }
-}
-
 </script>
 </body>
 </html>
