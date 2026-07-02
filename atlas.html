@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Atlas Clínico · Casartelli</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 36 36'%3E%3Crect width='36' height='36' rx='9' fill='%231B2A4A'/%3E%3Cpath d='M25 10.5C23.2 8.3 20.6 7 17.5 7 11.7 7 7 11.9 7 18s4.7 11 10.5 11c3.1 0 5.7-1.3 7.5-3.5' stroke='white' stroke-width='3' stroke-linecap='round' fill='none'/%3E%3Cpath d='M11 18h3.2l1.6-3.6 2.4 6.4 1.6-2.8h5.2' stroke='%23E87722' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' fill='none'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<!-- Firebase (mismo proyecto que Consultorio, nodo raíz separado "atlas") -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyC-H1Q7ganQheCNS5E-GfW9D0V04s-mneA",
+  authDomain: "consultorio-fc375.firebaseapp.com",
+  databaseURL: "https://consultorio-fc375-default-rtdb.firebaseio.com",
+  projectId: "consultorio-fc375",
+  storageBucket: "consultorio-fc375.firebasestorage.app",
+  messagingSenderId: "479178186370",
+  appId: "1:479178186370:web:e30e7089b64cd966239e9b"
+};
+firebase.initializeApp(firebaseConfig);
+const atlasRef = firebase.database().ref('atlas');
+</script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --navy:#1B2A4A; --navy-light:#2E4170; --orange:#E87722; --orange-light:#FEF0E3;
+  --bg:#FFFFFF; --surface:#F7F8FA; --border:#E2E5EA;
+  --text:#1A1A2E; --text-2:#5A6373; --text-3:#9AA0AD;
+  --green:#1B5E3B; --green-light:#EAF5EE; --red:#C0392B; --red-light:#FDECEA;
+  --blue-chip:#1A4E8C; --blue-chip-light:#EBF3FB;
+  --radius:12px; --radius-sm:8px;
+  --shadow:0 2px 12px rgba(0,0,0,.08); --shadow-lg:0 8px 32px rgba(0,0,0,.12);
+}
+html,body{height:100%;font-family:'Inter',sans-serif;background:var(--surface);color:var(--text);-webkit-tap-highlight-color:transparent;}
+input,textarea,select{font-family:'Inter',sans-serif;}
+button{cursor:pointer;}
+
+/* ── LOGIN GATE ── */
+.gate{position:fixed;inset:0;background:var(--navy);display:flex;align-items:center;justify-content:center;z-index:999;padding:20px;}
+.gate.hidden{display:none;}
+.gate-box{background:#fff;border-radius:var(--radius);padding:28px 24px;width:100%;max-width:320px;text-align:center;}
+.gate-box svg{margin-bottom:10px;}
+.gate-box h1{font-size:16px;color:var(--navy);margin-bottom:2px;}
+.gate-box p{font-size:12px;color:var(--text-2);margin-bottom:16px;}
+.gate-box input{width:100%;border:1px solid var(--border);border-radius:var(--radius-sm);padding:11px 12px;font-size:14px;outline:none;margin-bottom:10px;}
+.gate-box input:focus{border-color:var(--navy);}
+.gate-box button{width:100%;padding:11px;background:var(--orange);color:#fff;border:none;border-radius:var(--radius-sm);font-size:14px;font-weight:600;}
+.gate-err{color:var(--red);font-size:12px;margin-top:8px;display:none;}
+
+/* ── APP SHELL ── */
+.app{max-width:480px;margin:0 auto;min-height:100vh;background:var(--bg);display:flex;flex-direction:column;}
+.topbar{display:flex;align-items:center;gap:10px;padding:14px 16px;background:var(--navy);color:#fff;position:sticky;top:0;z-index:20;}
+.topbar h1{font-size:15px;font-weight:700;flex:1;}
+.topbar p{font-size:10.5px;color:rgba(255,255,255,.5);}
+.btn-back{background:rgba(255,255,255,.12);border:none;color:#fff;border-radius:8px;padding:7px 10px;font-size:13px;font-weight:600;}
+.panel{padding:18px 16px 40px;flex:1;}
+
+/* ── VISTA CUERPO ── */
+.body-intro{text-align:center;margin-bottom:6px;}
+.body-intro h2{font-size:16px;color:var(--navy);margin-bottom:4px;}
+.body-intro p{font-size:12.5px;color:var(--text-2);line-height:1.5;max-width:320px;margin:0 auto;}
+.body-wrap{display:flex;justify-content:center;padding:14px 0 6px;}
+.body-wrap svg{width:100%;max-width:260px;height:auto;}
+.hotspot{cursor:pointer;}
+.hotspot circle{transition:r .12s;}
+.hotspot.active circle.dot{fill:var(--orange);}
+.hotspot.active:active circle.dot{r:11;}
+.hotspot.locked circle.dot{fill:#C7CCD6;}
+.hotspot text{font-size:8px;font-weight:700;fill:var(--navy);text-anchor:middle;font-family:Inter,sans-serif;}
+.hotspot.locked text{fill:var(--text-3);}
+.zonas-legend{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin-top:6px;}
+.legend-chip{font-size:10.5px;padding:4px 9px;border-radius:20px;font-weight:600;}
+.legend-chip.active{background:var(--orange-light);color:var(--orange);}
+.legend-chip.locked{background:var(--surface);color:var(--text-3);border:1px solid var(--border);}
+
+/* ── VISTA ZONA ── */
+.zona-header{margin-bottom:14px;}
+.zona-header h2{font-size:18px;color:var(--navy);}
+.zona-search{width:100%;border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 12px;font-size:13px;outline:none;margin:10px 0 14px;background:var(--surface);}
+.zona-search:focus{border-color:var(--navy);background:#fff;}
+.btn-add-lesion{display:flex;align-items:center;justify-content:center;gap:6px;width:100%;padding:11px;background:var(--orange);color:#fff;border:none;border-radius:var(--radius-sm);font-size:13px;font-weight:600;margin-bottom:14px;}
+.lesion-list{display:flex;flex-direction:column;gap:10px;}
+.lesion-card{border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;background:var(--bg);}
+.lesion-head{display:flex;align-items:center;gap:8px;padding:12px 14px;background:var(--surface);cursor:pointer;}
+.lesion-head input{flex:1;border:none;background:transparent;font-size:14px;font-weight:700;color:var(--text);outline:none;font-family:Inter,sans-serif;}
+.lesion-chevron{color:var(--text-3);font-size:12px;transition:transform .15s;flex-shrink:0;}
+.lesion-card.open .lesion-chevron{transform:rotate(180deg);}
+.lesion-body{display:none;padding:14px;}
+.lesion-card.open .lesion-body{display:block;}
+.lesion-field{margin-bottom:14px;}
+.lesion-field label{display:block;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text-3);margin-bottom:5px;}
+.lesion-field textarea{width:100%;min-height:56px;border:1px solid var(--border);border-radius:var(--radius-sm);padding:9px 10px;font-size:13px;line-height:1.5;color:var(--text);outline:none;resize:vertical;font-family:Inter,sans-serif;}
+.lesion-field textarea:focus{border-color:var(--navy);}
+.sub-section-title{display:flex;align-items:center;gap:6px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--orange);margin-bottom:8px;}
+.sub-item{border:1px solid var(--border);border-radius:var(--radius-sm);padding:9px 10px;margin-bottom:7px;position:relative;background:var(--surface);}
+.sub-item input.si-title{width:calc(100% - 26px);border:none;background:transparent;font-size:13px;font-weight:600;color:var(--text);outline:none;margin-bottom:5px;font-family:Inter,sans-serif;}
+.sub-item textarea.si-body{width:100%;border:none;background:transparent;font-size:12.5px;color:var(--text-2);outline:none;resize:vertical;min-height:38px;line-height:1.45;font-family:Inter,sans-serif;}
+.sub-item input.si-meta{width:100%;border:none;background:transparent;font-size:11.5px;color:var(--blue-chip);outline:none;margin-top:3px;font-family:Inter,sans-serif;}
+.sub-item .si-del{position:absolute;top:8px;right:8px;background:none;border:none;color:var(--text-3);font-size:15px;font-weight:700;line-height:1;padding:2px;}
+.sub-item .si-date{font-size:10.5px;color:var(--text-3);margin-bottom:3px;display:block;}
+.btn-add-sub{width:100%;padding:8px;border:1.5px dashed var(--border);border-radius:var(--radius-sm);background:transparent;color:var(--text-2);font-size:12px;font-weight:600;font-family:Inter,sans-serif;}
+.lesion-actions{display:flex;justify-content:flex-end;margin-top:6px;}
+.btn-del-lesion{padding:7px 12px;background:transparent;border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text-3);font-size:12px;font-family:Inter,sans-serif;}
+.empty-zona{text-align:center;padding:40px 20px;color:var(--text-3);font-size:13px;}
+
+/* ── TOAST ── */
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--navy);color:#fff;padding:10px 18px;border-radius:30px;font-size:13px;font-weight:500;opacity:0;transition:.25s;z-index:200;pointer-events:none;box-shadow:var(--shadow-lg);}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+</style>
+</head>
+<body>
+
+<div class="gate" id="gate">
+  <div class="gate-box">
+    <svg width="40" height="40" viewBox="0 0 36 36"><rect width="36" height="36" rx="9" fill="#1B2A4A"/><path d="M25 10.5C23.2 8.3 20.6 7 17.5 7 11.7 7 7 11.9 7 18s4.7 11 10.5 11c3.1 0 5.7-1.3 7.5-3.5" stroke="white" stroke-width="3" stroke-linecap="round" fill="none"/><path d="M11 18h3.2l1.6-3.6 2.4 6.4 1.6-2.8h5.2" stroke="#E87722" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
+    <h1>Atlas Clínico</h1>
+    <p>Casartelli · uso personal</p>
+    <input type="password" id="gatePass" placeholder="Contraseña" onkeydown="if(event.key==='Enter')checkGate()">
+    <button onclick="checkGate()">Entrar</button>
+    <div class="gate-err" id="gateErr">Contraseña incorrecta.</div>
+  </div>
+</div>
+
+<div class="app" id="app" style="display:none;">
+  <div class="topbar">
+    <button class="btn-back" id="btnBack" style="display:none;" onclick="goHome()">← Cuerpo</button>
+    <div style="flex:1;">
+      <h1 id="topTitle">Atlas Clínico</h1>
+      <p id="topSub">Casartelli · MP 10722</p>
+    </div>
+  </div>
+  <div class="panel" id="panel"></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ══════════════════ ESTADO / UTILS ══════════════════
+let DATA = { zonas: {} };
+let currentZona = null;
+let openLesionIds = new Set();
+let autoSaveTimer = null;
+
+function uid(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,7); }
+function esc(s){ return (s==null?'':String(s)).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function showToast(msg){
+  const el=document.getElementById('toast');
+  el.textContent=msg; el.classList.add('show');
+  clearTimeout(showToast._t);
+  showToast._t=setTimeout(()=>el.classList.remove('show'),1800);
+}
+function saveDB(){ atlasRef.set(DATA); }
+function debSave(){ clearTimeout(autoSaveTimer); autoSaveTimer=setTimeout(saveDB,700); }
+
+// ══════════════════ LOGIN GATE ══════════════════
+function checkGate(){
+  const val=document.getElementById('gatePass').value;
+  if(val==='Casartelli2026'){
+    document.getElementById('gate').classList.add('hidden');
+    document.getElementById('app').style.display='flex';
+    initApp();
+  } else {
+    document.getElementById('gateErr').style.display='block';
+  }
+}
+
+// ══════════════════ ZONAS DEL CUERPO ══════════════════
+// "active" = zona con contenido cargado y funcional. El resto queda bloqueada
+// hasta que sumemos más zonas (arrancamos piloto con rodilla).
+const ZONAS = [
+  {id:'cuello',    label:'Cuello',        active:false, x:150, y:82},
+  {id:'hombro',    label:'Hombro',        active:false, x:100, y:112},
+  {id:'hombro',    label:'Hombro',        active:false, x:200, y:112},
+  {id:'columna',   label:'Columna',       active:false, x:150, y:150},
+  {id:'codo',      label:'Codo',          active:false, x:76,  y:188},
+  {id:'codo',      label:'Codo',          active:false, x:224, y:188},
+  {id:'cadera',    label:'Cadera',        active:false, x:150, y:238},
+  {id:'muneca',    label:'Muñeca / Mano', active:false, x:58,  y:262},
+  {id:'muneca',    label:'Muñeca / Mano', active:false, x:242, y:262},
+  {id:'rodilla',   label:'Rodilla',       active:true,  x:126, y:370},
+  {id:'rodilla',   label:'Rodilla',       active:true,  x:174, y:370},
+  {id:'tobillo',   label:'Tobillo / Pie', active:false, x:122, y:470},
+  {id:'tobillo',   label:'Tobillo / Pie', active:false, x:178, y:470},
+];
+const ZONA_LABELS = {};
+ZONAS.forEach(z=>ZONA_LABELS[z.id]=z.label);
+
+function initApp(){
+  document.getElementById('panel').innerHTML=`<div class="empty-zona">Cargando…</div>`;
+  atlasRef.on('value', snap=>{
+    const val=snap.val();
+    if(!val){
+      DATA = seedDefaultData();
+      saveDB();
+    } else {
+      DATA = val;
+      if(!DATA.zonas) DATA.zonas = {};
+    }
+    render();
+  }, err=>{
+    document.getElementById('panel').innerHTML=`
+      <div class="empty-zona" style="color:var(--red);text-align:left;line-height:1.6;">
+        <b>No se pudo conectar con la base de datos.</b><br><br>
+        Error: ${esc(err.message)}<br><br>
+        Lo más probable es que las reglas de Firebase no dejen leer/escribir el nodo <code>atlas</code>.
+        Entrá a Firebase Console → Realtime Database → Rules y agregá un bloque para <code>atlas</code>
+        igual al que ya tenés para <code>consultorio</code>.
+      </div>`;
+  });
+}
+
+// Base de arranque para la zona piloto (Rodilla) — 4 lesiones frecuentes como
+// ejemplo de formato. Están pensadas para editar/expandir, no como texto final.
+function seedDefaultData(){
+  const mk=(nombre,descripcion,estadisticas,evaluacion)=>({
+    id:uid(), nombre, descripcion, estadisticas,
+    evaluacion:evaluacion.map(e=>({nombre:e[0],detalle:e[1]})),
+    experiencias:[], papers:[]
+  });
+  return {
+    zonas:{
+      rodilla:{
+        lesiones:[
+          mk('Lesión de LCA (ligamento cruzado anterior)',
+            'Rotura total o parcial del LCA, típicamente por mecanismo de pivote/desaceleración sin contacto (valgo + rotación externa de tibia). Frecuente en deportes con cambios de dirección.',
+            'Una de las lesiones ligamentarias más estudiadas de rodilla; mayor incidencia en deportes de pivoteo y en mujeres vs. hombres en el mismo deporte. RTP habitual 9-12 meses post reconstrucción.',
+            [['Lachman','Rodilla en 20-30° flexión, se tracciona la tibia hacia anterior estabilizando el fémur. Positivo: desplazamiento aumentado sin punto final firme (end-point blando).'],
+             ['Pivot shift','Con la rodilla en extensión se aplica valgo + rotación interna y se flexiona progresivamente. Positivo: reducción brusca (clunk) alrededor de 20-30°, indica inestabilidad rotacional.']]),
+          mk('Lesión meniscal',
+            'Rotura del menisco medial o lateral, de causa traumática (torsión con pie fijo) o degenerativa. Puede asociarse a lesión de LCA.',
+            'El menisco medial se lesiona con más frecuencia que el lateral en mecanismos traumáticos; en mayores de 40 años predominan las roturas degenerativas.',
+            [['McMurray','Flexión máxima de rodilla, rotación de tibia (interna/externa) mientras se extiende. Positivo: click o dolor en la interlínea articular.'],
+             ['Thessaly','Apoyo monopodal en 20° de flexión con rotación del tronco/rodilla. Positivo: dolor en interlínea o sensación de bloqueo.']]),
+          mk('Tendinopatía rotuliana',
+            '"Rodilla del saltador". Sobrecarga del tendón rotuliano (habitualmente polo inferior de rótula) por sobreuso en deportes de salto/aceleración-desaceleración.',
+            'Muy prevalente en voley y básquet; el dolor localizado y la carga acumulada (volumen de saltos) son los principales factores asociados.',
+            [['Palpación polo inferior de rótula','Dolor focal reproducible a la palpación directa del polo inferior con rodilla en extensión.'],
+             ['Single leg decline squat','Sentadilla monopodal en plano declinado 25°. Reproduce dolor típico y permite graduar severidad (VISA-P complementa la evaluación).']]),
+          mk('Síndrome femoropatelar (dolor anterior de rodilla)',
+            'Dolor difuso anterior/retropatelar relacionado a alteración del tracking patelar, sobrecarga o déficit de control neuromuscular de cadera/rodilla. Diagnóstico de exclusión.',
+            'Una de las causas más frecuentes de consulta por dolor de rodilla en corredores y deportistas jóvenes; alta tasa de recurrencia si no se aborda el control motor proximal.',
+            [['Clarke / grinding test','Compresión de rótula contra tróclea mientras el paciente contrae cuádriceps. Positivo: dolor retropatelar (test poco específico, usar en conjunto con otros).'],
+             ['Step-down test','Descenso controlado de un escalón. Evalúa control de valgo dinámico de rodilla y reproduce el dolor funcional.']])
+        ]
+      }
+    }
+  };
+}
+
+function render(){
+  if(currentZona) renderZonaView(); else renderBodyView();
+}
+
+function goHome(){ currentZona=null; render(); }
+
+// ══════════════════ VISTA: CUERPO ══════════════════
+function renderBodyView(){
+  document.getElementById('btnBack').style.display='none';
+  document.getElementById('topTitle').textContent='Atlas Clínico';
+  document.getElementById('topSub').textContent='Casartelli · MP 10722';
+
+  const uniqueZonas=[...new Map(ZONAS.map(z=>[z.id,z])).values()];
+  const legend=uniqueZonas.map(z=>`<span class="legend-chip ${z.active?'active':'locked'}">${z.active?'✓ ':'🔒 '}${esc(z.label)}</span>`).join('');
+
+  const hotspots=ZONAS.map((z,i)=>`
+    <g class="hotspot ${z.active?'active':'locked'}" onclick="${z.active?`openZona('${z.id}')`:`showToast('Próximamente — por ahora estamos afinando el formato con Rodilla')`}">
+      <circle class="dot" cx="${z.x}" cy="${z.y}" r="9" fill="${z.active?'var(--orange)':'#C7CCD6'}" stroke="#fff" stroke-width="2"/>
+    </g>`).join('');
+
+  document.getElementById('panel').innerHTML=`
+    <div class="body-intro">
+      <h2>Tocá una zona del cuerpo</h2>
+      <p>Lesiones frecuentes, cómo evaluarlas, estadísticas, tus casos y papers — todo junto por zona.</p>
+    </div>
+    <div class="body-wrap">
+      <svg viewBox="0 0 300 520" fill="none">
+        <circle cx="150" cy="45" r="28" fill="var(--surface)" stroke="var(--navy)" stroke-width="3"/>
+        <path d="M150 73 L150 95" stroke="var(--navy)" stroke-width="4" stroke-linecap="round"/>
+        <rect x="108" y="95" width="84" height="150" rx="24" fill="var(--surface)" stroke="var(--navy)" stroke-width="3"/>
+        <path d="M108 112 L76 188 L58 262" stroke="var(--navy)" stroke-width="4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M192 112 L224 188 L242 262" stroke="var(--navy)" stroke-width="4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M130 245 L126 370 L122 470" stroke="var(--navy)" stroke-width="4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M170 245 L174 370 L178 470" stroke="var(--navy)" stroke-width="4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+        ${hotspots}
+      </svg>
+    </div>
+    <div class="zonas-legend">${legend}</div>
+  `;
+}
+
+function openZona(zonaId){ currentZona=zonaId; openLesionIds=new Set(); render(); }
+
+// ══════════════════ VISTA: ZONA (lista de lesiones) ══════════════════
+function getZonaData(zonaId){
+  if(!DATA.zonas[zonaId]) DATA.zonas[zonaId]={lesiones:[]};
+  if(!DATA.zonas[zonaId].lesiones) DATA.zonas[zonaId].lesiones=[];
+  return DATA.zonas[zonaId];
+}
+
+function renderZonaView(){
+  document.getElementById('btnBack').style.display='inline-block';
+  document.getElementById('topTitle').textContent=ZONA_LABELS[currentZona]||'Zona';
+  document.getElementById('topSub').textContent='Lesiones, evaluación, estadísticas, casos y papers';
+
+  const z=getZonaData(currentZona);
+  const q=(document.getElementById('zonaSearchInput')?document.getElementById('zonaSearchInput').value:'').toLowerCase();
+  const lesiones=z.lesiones.filter(l=>!q||(l.nombre||'').toLowerCase().includes(q));
+
+  const cardsHtml=lesiones.length? lesiones.map(l=>buildLesionCard(l)).join('') :
+    `<div class="empty-zona">${z.lesiones.length?'No hay lesiones que matcheen la búsqueda.':'Todavía no hay lesiones cargadas en esta zona.'}</div>`;
+
+  document.getElementById('panel').innerHTML=`
+    <div class="zona-header">
+      <input class="zona-search" id="zonaSearchInput" placeholder="Buscar lesión…" value="${esc(q)}" oninput="renderZonaView()">
+      <button class="btn-add-lesion" onclick="addLesion()">+ Agregar lesión / patología</button>
+    </div>
+    <div class="lesion-list">${cardsHtml}</div>
+  `;
+  // Restaurar foco de búsqueda si estaba escribiendo
+  const inp=document.getElementById('zonaSearchInput');
+  if(document.activeElement===inp){} // noop, ya tiene el valor
+}
+
+function buildLesionCard(l){
+  const open=openLesionIds.has(l.id);
+  const evalHtml=(l.evaluacion||[]).map((e,i)=>`
+    <div class="sub-item">
+      <button class="si-del" onclick="removeSubItem('${l.id}','evaluacion',${i})" title="Eliminar">×</button>
+      <input class="si-title" value="${esc(e.nombre)}" placeholder="Nombre del test (ej. Lachman)" oninput="updateSubItem('${l.id}','evaluacion',${i},'nombre',this.value)">
+      <textarea class="si-body" placeholder="Cómo se hace y qué indica un resultado positivo…" oninput="updateSubItem('${l.id}','evaluacion',${i},'detalle',this.value)">${esc(e.detalle)}</textarea>
+    </div>`).join('');
+
+  const papersHtml=(l.papers||[]).map((pp,i)=>`
+    <div class="sub-item">
+      <button class="si-del" onclick="removeSubItem('${l.id}','papers',${i})" title="Eliminar">×</button>
+      <input class="si-title" value="${esc(pp.titulo)}" placeholder="Título del paper" oninput="updateSubItem('${l.id}','papers',${i},'titulo',this.value)">
+      <input class="si-meta" value="${esc(pp.autorAnio)}" placeholder="Autor, año" oninput="updateSubItem('${l.id}','papers',${i},'autorAnio',this.value)">
+      <input class="si-meta" value="${esc(pp.link)}" placeholder="Link (opcional)" oninput="updateSubItem('${l.id}','papers',${i},'link',this.value)">
+      <textarea class="si-body" placeholder="Resumen / conclusión clave…" oninput="updateSubItem('${l.id}','papers',${i},'resumen',this.value)">${esc(pp.resumen)}</textarea>
+    </div>`).join('');
+
+  const expHtml=(l.experiencias||[]).map((ex,i)=>`
+    <div class="sub-item">
+      <button class="si-del" onclick="removeSubItem('${l.id}','experiencias',${i})" title="Eliminar">×</button>
+      <input type="date" class="si-date" value="${esc(ex.fecha)}" onchange="updateSubItem('${l.id}','experiencias',${i},'fecha',this.value)" style="border:none;background:transparent;color:var(--text-3);font-family:Inter,sans-serif;">
+      <textarea class="si-body" placeholder="Qué viste, qué funcionó, qué no…" oninput="updateSubItem('${l.id}','experiencias',${i},'texto',this.value)">${esc(ex.texto)}</textarea>
+    </div>`).join('');
+
+  return `
+  <div class="lesion-card ${open?'open':''}" id="lc_${l.id}">
+    <div class="lesion-head" onclick="toggleLesion('${l.id}')">
+      <input value="${esc(l.nombre)}" placeholder="Nombre de la lesión" onclick="event.stopPropagation()" oninput="updateLesionField('${l.id}','nombre',this.value)">
+      <span class="lesion-chevron">▾</span>
+    </div>
+    <div class="lesion-body">
+      <div class="lesion-field">
+        <label>Descripción</label>
+        <textarea placeholder="Qué es, mecanismo de lesión, presentación clínica típica…" oninput="updateLesionField('${l.id}','descripcion',this.value)">${esc(l.descripcion)}</textarea>
+      </div>
+      <div class="lesion-field">
+        <label>Estadísticas / epidemiología</label>
+        <textarea placeholder="Incidencia, prevalencia, factores de riesgo, tiempos de RTP…" oninput="updateLesionField('${l.id}','estadisticas',this.value)">${esc(l.estadisticas)}</textarea>
+      </div>
+      <div class="lesion-field">
+        <div class="sub-section-title">🔍 Cómo evaluarla</div>
+        ${evalHtml}
+        <button class="btn-add-sub" onclick="addSubItem('${l.id}','evaluacion',{nombre:'',detalle:''})">+ Agregar test</button>
+      </div>
+      <div class="lesion-field">
+        <div class="sub-section-title">📝 Mis experiencias</div>
+        ${expHtml}
+        <button class="btn-add-sub" onclick="addSubItem('${l.id}','experiencias',{fecha:new Date().toISOString().slice(0,10),texto:''})">+ Agregar experiencia</button>
+      </div>
+      <div class="lesion-field">
+        <div class="sub-section-title">📄 Papers / referencias</div>
+        ${papersHtml}
+        <button class="btn-add-sub" onclick="addSubItem('${l.id}','papers',{titulo:'',autorAnio:'',link:'',resumen:''})">+ Agregar paper</button>
+      </div>
+      <div class="lesion-actions">
+        <button class="btn-del-lesion" onclick="deleteLesion('${l.id}')">Eliminar lesión</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+function toggleLesion(id){
+  if(openLesionIds.has(id)) openLesionIds.delete(id); else openLesionIds.add(id);
+  const el=document.getElementById('lc_'+id);
+  if(el) el.classList.toggle('open', openLesionIds.has(id));
+}
+
+function addLesion(){
+  const z=getZonaData(currentZona);
+  const id=uid();
+  z.lesiones.push({id, nombre:'', descripcion:'', estadisticas:'', evaluacion:[], experiencias:[], papers:[]});
+  openLesionIds.add(id);
+  saveDB();
+  renderZonaView();
+  setTimeout(()=>{ const el=document.getElementById('lc_'+id); if(el) el.scrollIntoView({behavior:'smooth',block:'center'}); },50);
+}
+function deleteLesion(id){
+  if(!confirm('¿Eliminar esta lesión y todo lo cargado (evaluación, casos, papers)?')) return;
+  const z=getZonaData(currentZona);
+  z.lesiones=z.lesiones.filter(l=>l.id!==id);
+  saveDB();
+  renderZonaView();
+}
+function updateLesionField(id,field,val){
+  const z=getZonaData(currentZona);
+  const l=z.lesiones.find(x=>x.id===id); if(!l) return;
+  l[field]=val;
+  debSave();
+}
+function addSubItem(lesionId,key,item){
+  const z=getZonaData(currentZona);
+  const l=z.lesiones.find(x=>x.id===lesionId); if(!l) return;
+  if(!l[key]) l[key]=[];
+  l[key].push(item);
+  saveDB();
+  renderZonaView();
+}
+function removeSubItem(lesionId,key,idx){
+  const z=getZonaData(currentZona);
+  const l=z.lesiones.find(x=>x.id===lesionId); if(!l||!l[key]) return;
+  l[key].splice(idx,1);
+  saveDB();
+  renderZonaView();
+}
+function updateSubItem(lesionId,key,idx,field,val){
+  const z=getZonaData(currentZona);
+  const l=z.lesiones.find(x=>x.id===lesionId); if(!l||!l[key]||!l[key][idx]) return;
+  l[key][idx][field]=val;
+  debSave();
+}
+</script>
+</body>
+</html>
