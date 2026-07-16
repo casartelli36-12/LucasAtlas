@@ -189,7 +189,8 @@ textarea.autogrow{resize:none;overflow:hidden;}
 .tab-count{background:rgba(0,0,0,.08);border-radius:10px;padding:1px 6px;font-size:10.5px;}
 .bib-tabs button.on .tab-count{background:rgba(255,255,255,.25);}
 
-.bib-zona-filter{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px;}
+.bib-zona-filter{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;align-items:center;}
+.filter-label{font-size:10.5px;font-weight:700;color:var(--ink-3);text-transform:uppercase;letter-spacing:.05em;margin-right:2px;}
 .zona-chip{font-size:11px;padding:5px 11px;border-radius:20px;font-weight:600;background:var(--paper-surface);color:var(--ink-2);border:1px solid var(--paper-border);cursor:pointer;}
 .zona-chip.on{background:var(--ink);color:#fff;border-color:var(--ink);}
 
@@ -279,6 +280,8 @@ let screen = 'biblioteca'; // 'biblioteca' | 'atlas'
 let BIB = { articulos: [] };
 let bibFilter = 'pendiente'; // 'pendiente' | 'leyendo' | 'leido' | 'todos'
 let bibZonaFilter = '';
+let bibCategoriaFilter = '';
+let bibNivelFilter = '';
 let openArticleIds = new Set();
 let bibSaveTimer = null;
 function bibSaveDB(){ bibliotecaRef.set(BIB); }
@@ -336,12 +339,45 @@ const ZONA_LABELS = {};
 ZONAS.forEach(z=>ZONA_LABELS[z.id]=z.label);
 const CLINICAL_ZONAS = [...new Map(ZONAS.map(z=>[z.id,z])).values()];
 
+// Categorías temáticas de la Biblioteca, independientes de la zona anatómica
+// (un paper de fuerza o de neurociencia del dolor no siempre es de una zona).
+const CATEGORIAS = [
+  {id:'fuerza',       label:'Entrenamiento de fuerza'},
+  {id:'rtp',          label:'Return to sport'},
+  {id:'dolor',        label:'Neurociencia del dolor'},
+  {id:'prevencion',   label:'Prevención de lesiones'},
+  {id:'calidad_vida', label:'Calidad de vida / salud general'},
+  {id:'evaluacion',   label:'Evaluación y tests clínicos'},
+  {id:'guias',        label:'Guías de práctica clínica'},
+  {id:'otro',         label:'Otro / general'}
+];
+const CATEGORIA_LABELS = {};
+CATEGORIAS.forEach(c=>CATEGORIA_LABELS[c.id]=c.label);
+
+// Nivel de evidencia — otra dimensión de filtro, independiente de zona y tema.
+const NIVELES = [
+  {id:'guia',       label:'Guía / consenso clínico'},
+  {id:'rs',         label:'Revisión sistemática / meta-análisis'},
+  {id:'rct',        label:'Ensayo clínico (RCT)'},
+  {id:'cohorte',    label:'Estudio de cohorte'},
+  {id:'caso_serie', label:'Serie de casos / piloto'},
+  {id:'narrativa',  label:'Revisión narrativa / masterclass'}
+];
+const NIVEL_LABELS = {};
+NIVELES.forEach(n=>NIVEL_LABELS[n.id]=n.label);
+
 function initApp(){
   document.getElementById('panel').innerHTML=`<div class="empty-zona">Cargando…</div>`;
 
   bibliotecaRef.on('value', snap=>{
     const val=snap.val();
-    BIB = (val && val.articulos) ? val : { articulos: [] };
+    if(!val){
+      BIB = seedDefaultBiblioteca();
+      bibSaveDB();
+    } else {
+      BIB = val.articulos ? val : { articulos: [] };
+      migrateBiblioteca();
+    }
     if(screen==='biblioteca') render();
   }, err=>{
     if(screen==='biblioteca') document.getElementById('panel').innerHTML=`
@@ -914,11 +950,114 @@ function updateSubItem(lesionId,key,idx,field,val){
 }
 
 // ══════════════════ VISTA: BIBLIOTECA ══════════════════
+// Carga inicial con papers de referencia en fisio/kinesio deportiva.
+// Resúmenes y "cita clave" escritos en base a conocimiento general del tema,
+// no son citas textuales — conviene chequear el artículo original antes de
+// usar una cifra puntual en una decisión clínica. El link/DOI está confirmado
+// por búsqueda solo en los primeros 6 (Grindem, Cook&Purdam, Lewis, O'Sullivan,
+// Grimaldi, Vuurberg); el resto quedó sin link para que lo completes vos.
+// Suma papers nuevos del seed que todavía no estén (por título) y le agrega
+// categoría a los que ya existían sin ese campo. No pisa nada que ya hayas
+// editado (estado, resumen, rating, etc.), corre cada vez que se abre la app.
+function migrateBiblioteca(){
+  const seed=seedDefaultBiblioteca().articulos;
+  let changed=false;
+  seed.forEach(seedArt=>{
+    const existing=BIB.articulos.find(a=>a.titulo===seedArt.titulo);
+    if(!existing){
+      BIB.articulos.push(seedArt);
+      changed=true;
+    } else {
+      if(!existing.categoria && seedArt.categoria){ existing.categoria=seedArt.categoria; changed=true; }
+      if(!existing.nivel && seedArt.nivel){ existing.nivel=seedArt.nivel; changed=true; }
+    }
+  });
+  if(changed) bibSaveDB();
+}
+
+function seedDefaultBiblioteca(){
+  const mk=(titulo,autorAnio,link,zona,categoria,nivel,tags,resumen,citaClave)=>({
+    id: uid(), titulo, autorAnio, link, estado:'pendiente', zona, categoria, nivel, tags,
+    rating:0, resumen, citaClave,
+    fecha:new Date().toISOString().slice(0,10), fechaLeido:''
+  });
+  return { articulos: [
+    mk('Reglas de decisión simples pueden reducir el riesgo de re-lesión en un 84% tras la reconstrucción de LCA','Grindem et al., 2016','https://doi.org/10.1136/bjsports-2016-096031','rodilla','rtp','cohorte','LCA, RTP, criterios de alta, fuerza de cuádriceps',
+      'Cohorte Delaware-Oslo sobre pacientes con LCA reconstruido que volvieron a deportes de pivoteo. Retomar antes de los 9 meses y sin simetría de fuerza de cuádriceps se asocia a mucho mayor riesgo de nueva lesión. Es una de las bases de los criterios de alta actuales (tiempo + LSI de fuerza), más allá de la sola cicatrización del injerto.',
+      'Volver a deportes de pivoteo tras reconstruir el LCA multiplica por más de 4 el riesgo de re-lesión en 2 años; retrasar el RTP hasta los 9 meses y llegar con fuerza simétrica de cuádriceps reduce sustancialmente ese riesgo.'),
+    mk('¿Es la patología tendinosa un continuo? Modelo para explicar la presentación clínica de la tendinopatía por sobrecarga','Cook & Purdam, 2009','https://doi.org/10.1136/bjsm.2008.051193','rodilla','otro','narrativa','tendinopatía, continuum, carga, rotuliano',
+      'Propone el modelo de continuum de tendinopatía (reactiva → disrepair → degenerativa) para explicar por qué un mismo tendón se presenta de formas distintas según la carga acumulada. Base conceptual para decidir entre descarga relativa (fase reactiva) o carga progresiva pesada y lenta (disrepair/degenerativa), en vez de tratar toda tendinopatía igual.',
+      'El continuum tiene 3 estados (reactivo, disrepair, degenerativo); el manejo de carga debe adaptarse al estado, no aplicarse igual a todos los tendones dolorosos.'),
+    mk('Probabilidad de rotura del injerto de LCA: no cumplir 6 criterios clínicos de alta se asocia a 4 veces más riesgo','Kyritsis et al., 2016','','rodilla','rtp','cohorte','LCA, criterios de alta, RTP',
+      'Complementa a Grindem 2016: evaluó una batería de 6 criterios clínicos de alta (fuerza, hop tests, etc.) antes de autorizar el RTP tras reconstrucción de LCA. Quienes no cumplían todos los criterios tuvieron un riesgo notablemente mayor de romper el injerto al volver a jugar.',
+      'No superar la batería completa de criterios de alta (no solo el tiempo transcurrido) se asocia a un riesgo varias veces mayor de rotura del injerto.'),
+    mk('Recomendaciones basadas en evidencia para el manejo de la rotura de LCA','Filbay & Grindem, 2019','','rodilla','rtp','narrativa','LCA, manejo conservador vs quirúrgico, RTP',
+      'Revisión que compara reconstrucción quirúrgica contra manejo conservador con rehabilitación estructurada (con reconstrucción diferida si aparece inestabilidad funcional). Plantea individualizar la decisión según nivel de actividad, deporte y estabilidad funcional, en vez de indicar cirugía automáticamente en todos los casos.',
+      'El manejo conservador con rehabilitación estructurada es una opción válida para un subgrupo de pacientes con rotura de LCA, con reconstrucción diferida si aparece inestabilidad funcional persistente.'),
+    mk('Dolor de hombro relacionado con el manguito rotador: evaluación, manejo e incertidumbres','Lewis, 2016','https://doi.org/10.1016/j.math.2016.03.009','hombro','guias','narrativa','manguito rotador, pinzamiento, ejercicio, RCRSP',
+      'Masterclass que agrupa pinzamiento subacromial, tendinopatía del manguito y roturas parciales bajo "dolor de hombro relacionado con el manguito rotador" (RCRSP). Plantea que un programa de ejercicio bien construido y progresivo logra resultados equivalentes a la cirugía en la mayoría de los casos, y cuestiona el valor de muchos tests especiales aislados.',
+      'El ejercicio terapéutico bien planificado logra resultados comparables a la cirugía en RCRSP en la mayoría de los casos publicados de alta calidad.'),
+    mk('Ejercicio para la tendinopatía del manguito rotador: revisión sistemática','Littlewood et al., 2013','','hombro','otro','rs','manguito rotador, ejercicio, tendinopatía',
+      'Revisión sistemática de programas de ejercicio (fortalecimiento del manguito y estabilizadores escapulares) para tendinopatía del manguito rotador. Apoya el ejercicio como primera línea, aunque señala heterogeneidad importante entre los protocolos estudiados.',
+      'El ejercicio terapéutico tiene buen respaldo como primera línea en tendinopatía de manguito, aunque no hay un protocolo único claramente superior a los demás.'),
+    mk('Diagnóstico y clasificación de los trastornos de dolor lumbar crónico: movimiento maladaptativo y control motor como mecanismo subyacente','O\'Sullivan, 2005','https://doi.org/10.1016/j.math.2005.07.001','columna','evaluacion','narrativa','lumbalgia crónica, control motor, clasificación',
+      'Propone clasificar la lumbalgia crónica no específica según el mecanismo dominante (patología específica, factores psicosociales, o alteración del control motor/movimiento) en vez de tratarla como una entidad única. Sienta las bases de los enfoques de "terapia cognitivo-funcional" usados hoy para lumbalgia persistente.',
+      'El 85% de la lumbalgia crónica no tiene causa estructural identificable ("no específica"); clasificar por mecanismo dominante orienta mucho mejor el tratamiento que un abordaje único para todos.'),
+    mk('Qué es el dolor lumbar y por qué debemos prestarle atención','Hartvigsen et al., 2018 (serie Lancet)','','columna','calidad_vida','narrativa','lumbalgia, salud pública, guías',
+      'Primer artículo de la serie de The Lancet sobre dolor lumbar. Lo plantea como un problema de salud global masivo, cuestiona el sobrediagnóstico por imágenes y el sobretratamiento (cirugía/opioides), y llama a priorizar educación, mantenerse activo y manejo conservador basado en evidencia.',
+      'El dolor lumbar es la principal causa de discapacidad a nivel mundial; buena parte del manejo actual (imágenes innecesarias, reposo, sobretratamiento) no está alineado con la evidencia.'),
+    mk('Tendinopatía glútea: integrando la pato-mecánica y las características clínicas en su manejo','Grimaldi & Fearon, 2015','https://doi.org/10.2519/jospt.2015.5829','cadera','guias','narrativa','tendinopatía glútea, cadera lateral, trocánter',
+      'Posiciona la tendinopatía glútea (glúteo medio/menor) como causa primaria del dolor lateral de cadera, desplazando el viejo diagnóstico de "bursitis trocantérea". Explica por qué las posiciones de aducción sostenida (dormir de costado, piernas cruzadas) agravan el cuadro por compresión del tendón, y propone progresión de carga evitando esas posiciones al inicio.',
+      'La compresión del tendón glúteo contra el trocánter en posiciones de aducción sostenida es un factor agravante clave; el manejo debe evitar esa compresión antes de progresar la carga.'),
+    mk('Diagnóstico, tratamiento y prevención de esguinces de tobillo: guía clínica basada en evidencia','Vuurberg et al., 2018','https://doi.org/10.1136/bjsports-2017-098106','tobillo','guias','guia','esguince, tobillo, guía clínica, inestabilidad crónica',
+      'Consenso internacional que actualiza el manejo del esguince lateral de tobillo agudo. Recomienda carga funcional temprana (tipo POLICE en vez de RICE/PRICE) por sobre el reposo prolongado, y remarca la importancia del trabajo propioceptivo para prevenir inestabilidad crónica.',
+      'La carga funcional temprana supera al reposo prolongado; el trabajo propioceptivo estructurado reduce el riesgo de inestabilidad crónica tras un esguince.'),
+    mk('Dolor de talón / fascitis plantar: guía de práctica clínica','Martin et al., 2014','','tobillo','guias','guia','fascitis plantar, guía clínica, talón',
+      'Guía de práctica clínica sobre fascitis plantar. Respalda el estiramiento específico de la fascia (técnica de dorsiflexión de dedos sobre toalla enrollada), el fortalecimiento del tríceps sural, y el uso de férulas nocturnas u ortesis en casos seleccionados.',
+      'El estiramiento específico de la fascia plantar en dorsiflexión de dedos, sostenido varias semanas, tiene de los niveles de evidencia más altos dentro del manejo conservador de la fascitis plantar.'),
+    mk('Efecto de la infiltración de corticoides, la fisioterapia, o ambas, en la epicondilalgia lateral unilateral','Coombes et al., 2013','','codo','otro','rct','codo de tenista, epicondilalgia, infiltración',
+      'Ensayo clínico que comparó infiltración de corticoides, fisioterapia (ejercicio + técnicas manuales), y la combinación de ambas. La infiltración mostró alivio más rápido al inicio, pero peores resultados a mediano/largo plazo (más recurrencia) que el manejo activo.',
+      'La infiltración de corticoides mejora más rápido al inicio, pero se asocia a peor pronóstico a largo plazo (más recaídas) que el manejo activo con ejercicio.'),
+    mk('Dolor de cuello: guía de práctica clínica vinculada a la clasificación internacional del funcionamiento','Childs et al., 2008','','cuello','guias','guia','cervicalgia, guía clínica, clasificación',
+      'Guía de práctica clínica que propone clasificar el dolor cervical en subgrupos (con déficit de movilidad, con cefalea, con déficit de control motor, con dolor irradiado) para orientar el tratamiento, en vez de dar un protocolo único.',
+      'Clasificar al paciente con cervicalgia en subgrupos clínicos mejora la orientación del tratamiento frente a un protocolo genérico.'),
+    mk('Ejercicio y movilización para el síndrome del túnel carpiano (revisión Cochrane)','Page et al. (Cochrane Review)','','muneca','guias','rs','túnel carpiano, ejercicio neural, Cochrane',
+      'Revisión Cochrane sobre técnicas de ejercicio y movilización neural para el síndrome del túnel carpiano. Evidencia de calidad limitada, pero sugiere que el deslizamiento neural y el ejercicio pueden aportar beneficio en casos leves a moderados; no reemplaza la cirugía si hay déficit neurológico progresivo.',
+      'En túnel carpiano leve a moderado, el deslizamiento neural y el ejercicio tienen respaldo limitado pero razonable; los casos con déficit neurológico progresivo requieren derivación quirúrgica.'),
+    mk('La importancia de la fuerza muscular en el rendimiento deportivo','Suchomel, Nimphius & Stone, 2016','https://doi.org/10.1007/s40279-016-0486-0','','fuerza','rs','fuerza, rendimiento, prevención, potencia',
+      'Revisión que reúne la evidencia sobre cómo la fuerza máxima influye en salto, sprint, cambios de dirección y gestos específicos del deporte. Plantea que la fuerza es una cualidad "base" que potencia todo lo demás (potencia, velocidad, capacidad de desacelerar) y que además reduce el riesgo de lesión, por lo que no debería tratarse como algo aparte de la reeducación de gestos técnicos.',
+      'Mayor fuerza máxima se asocia consistentemente a mejor rendimiento en salto, sprint y cambios de dirección, además de menor riesgo de lesión — no parece haber sustituto para desarrollarla en el atleta.'),
+    mk('Quince años de "Explicando el Dolor": pasado, presente y futuro','Moseley & Butler, 2015','https://doi.org/10.1016/j.jpain.2015.05.005','','dolor','narrativa','neurociencia del dolor, educación, biopsicosocial',
+      'Repaso de 15 años del enfoque "Explain Pain": educar al paciente sobre la biología del dolor (distinguir nocicepción de dolor, entender el dolor como mecanismo protector y no como indicador directo de daño tisular) como herramienta terapéutica en sí misma, no solo como complemento del ejercicio. Reduce catastrofización y miedo al movimiento en dolor persistente.',
+      'Entender que el dolor es un mecanismo de protección del sistema nervioso —y no un medidor directo de daño en el tejido— reduce la catastrofización y facilita la vuelta al movimiento en dolor persistente.'),
+    mk('Entrenamiento excéntrico pesado de tríceps sural para el tratamiento de la tendinosis crónica de Aquiles','Alfredson et al., 1998','https://doi.org/10.1177/03635465980260030301','tobillo','fuerza','caso_serie','Aquiles, excéntrico, tendinosis, fuerza',
+      'El estudio original que popularizó el protocolo excéntrico "de Alfredson" para tendinopatía aquílea: descensos de talón lentos y pesados, cargando el gemelo/sóleo en fase excéntrica. Los 15 pacientes de la serie volvieron a correr sin dolor tras 12 semanas, tras fracasar con tratamiento convencional previo.',
+      'Un protocolo de solo ejercicio excéntrico pesado (sin otras intervenciones) devolvió a corredores recreativos con tendinosis aquílea crónica a su nivel previo de actividad en 12 semanas.'),
+    mk('Programa de calentamiento integral para prevenir lesiones en futbolistas jóvenes (FIFA 11+)','Soligard et al., 2008','https://doi.org/10.1136/bmj.a2469','','prevencion','rct','prevención, calentamiento, fútbol, neuromuscular',
+      'Ensayo clínico aleatorizado por clusters en más de 2500 futbolistas juveniles femeninas. El grupo que reemplazó el calentamiento habitual por el programa FIFA 11+ (ejercicios de carrera, fuerza, pliometría y equilibrio) tuvo menos lesiones graves y por sobreuso que el grupo control. Es la base del programa FIFA 11+ hoy usado mundialmente.',
+      'Reemplazar el calentamiento tradicional por un programa neuromuscular estructurado de ~20 minutos redujo las lesiones graves y por sobreuso en futbolistas jóvenes, sin costo ni equipamiento adicional.'),
+    mk('Acuerdo de Doha sobre terminología y definiciones del dolor inguinal en deportistas','Weir et al., 2015','https://doi.org/10.1136/bjsports-2015-094869','cadera','guias','guia','ingle, cadera, consenso, terminología',
+      'Consenso internacional de expertos que unificó la terminología del dolor inguinal en deportistas (relacionado a aductores, psoas-ilíaco, región inguinal, pubis, o de origen articular de cadera), reemplazando términos ambiguos como "pubalgia" que agrupaban entidades muy distintas bajo un mismo nombre.',
+      'Clasificar el dolor inguinal por estructura implicada (aductores/psoas/inguinal/pubis/cadera) en vez de usar "pubalgia" como cajón de sastre mejora tanto el diagnóstico como la comparación entre estudios.'),
+    mk('Ejercicio de control motor para el dolor lumbar crónico no específico (revisión Cochrane)','Saragiotto et al., 2016','https://doi.org/10.1002/14651858.CD012004','columna','otro','rs','lumbalgia, control motor, Cochrane, ejercicio',
+      'Revisión Cochrane que evalúa el ejercicio de control motor (activación de musculatura profunda del tronco, progresando a tareas funcionales) frente a otras intervenciones o placebo en lumbalgia crónica no específica. Encuentra beneficios modestos pero consistentes en dolor y discapacidad, sin ser claramente superior a otras formas de ejercicio bien indicadas.',
+      'El ejercicio de control motor tiene efectos modestos pero reales sobre dolor y discapacidad en lumbalgia crónica; no parece superar a otras modalidades de ejercicio bien prescriptas, lo que refuerza que "qué ejercicio" importa menos que "hacerlo bien y de forma sostenida".')
+  ]};
+}
+
 function truncate(s,n){ s=s||''; return s.length>n ? s.slice(0,n).trim()+'…' : s; }
 
 function zonaOptionsHtml(selected){
   return `<option value="">Zona clínica (opcional)</option>` +
     CLINICAL_ZONAS.map(z=>`<option value="${z.id}" ${z.id===selected?'selected':''}>${esc(z.label)}</option>`).join('');
+}
+function categoriaOptionsHtml(selected){
+  return `<option value="">Tema (opcional)</option>` +
+    CATEGORIAS.map(c=>`<option value="${c.id}" ${c.id===selected?'selected':''}>${esc(c.label)}</option>`).join('');
+}
+function nivelOptionsHtml(selected){
+  return `<option value="">Nivel de evidencia (opcional)</option>` +
+    NIVELES.map(n=>`<option value="${n.id}" ${n.id===selected?'selected':''}>${esc(n.label)}</option>`).join('');
 }
 
 function starsHtml(rating){
@@ -956,6 +1095,8 @@ function renderBibliotecaView(){
   let list=BIB.articulos.slice();
   if(bibFilter!=='todos') list=list.filter(a=>a.estado===bibFilter);
   if(bibZonaFilter) list=list.filter(a=>a.zona===bibZonaFilter);
+  if(bibCategoriaFilter) list=list.filter(a=>a.categoria===bibCategoriaFilter);
+  if(bibNivelFilter) list=list.filter(a=>a.nivel===bibNivelFilter);
   if(q) list=list.filter(a=>
     (a.titulo||'').toLowerCase().includes(q) ||
     (a.autorAnio||'').toLowerCase().includes(q) ||
@@ -967,8 +1108,25 @@ function renderBibliotecaView(){
   const zonasPresentes=[...new Set(BIB.articulos.map(a=>a.zona).filter(Boolean))];
   const zonaChipsHtml = zonasPresentes.length ? `
     <div class="bib-zona-filter">
+      <span class="filter-label">Zona:</span>
       <span class="zona-chip ${bibZonaFilter===''?'on':''}" onclick="setBibZonaFilter('')">Todas</span>
       ${zonasPresentes.map(zid=>`<span class="zona-chip ${bibZonaFilter===zid?'on':''}" onclick="setBibZonaFilter('${zid}')">${esc(ZONA_LABELS[zid]||zid)}</span>`).join('')}
+    </div>` : '';
+
+  const categoriasPresentes=[...new Set(BIB.articulos.map(a=>a.categoria).filter(Boolean))];
+  const categoriaChipsHtml = categoriasPresentes.length ? `
+    <div class="bib-zona-filter">
+      <span class="filter-label">Tema:</span>
+      <span class="zona-chip ${bibCategoriaFilter===''?'on':''}" onclick="setBibCategoriaFilter('')">Todos</span>
+      ${categoriasPresentes.map(cid=>`<span class="zona-chip ${bibCategoriaFilter===cid?'on':''}" onclick="setBibCategoriaFilter('${cid}')">${esc(CATEGORIA_LABELS[cid]||cid)}</span>`).join('')}
+    </div>` : '';
+
+  const nivelesPresentes=[...new Set(BIB.articulos.map(a=>a.nivel).filter(Boolean))];
+  const nivelChipsHtml = nivelesPresentes.length ? `
+    <div class="bib-zona-filter">
+      <span class="filter-label">Nivel:</span>
+      <span class="zona-chip ${bibNivelFilter===''?'on':''}" onclick="setBibNivelFilter('')">Todos</span>
+      ${nivelesPresentes.map(nid=>`<span class="zona-chip ${bibNivelFilter===nid?'on':''}" onclick="setBibNivelFilter('${nid}')">${esc(NIVEL_LABELS[nid]||nid)}</span>`).join('')}
     </div>` : '';
 
   const cardsHtml = list.length ? list.map(a=>buildArticuloCard(a)).join('') :
@@ -988,6 +1146,8 @@ function renderBibliotecaView(){
       <button class="${bibFilter==='todos'?'on':''}" onclick="setBibFilter('todos')">Todos</button>
     </div>
     ${zonaChipsHtml}
+    ${categoriaChipsHtml}
+    ${nivelChipsHtml}
     <div class="bib-list">${cardsHtml}</div>
     <button class="btn-add-article" onclick="addArticulo()">+ Agregar artículo</button>
   `;
@@ -996,6 +1156,8 @@ function renderBibliotecaView(){
 
 function setBibFilter(f){ bibFilter=f; renderBibliotecaView(); }
 function setBibZonaFilter(zid){ bibZonaFilter=zid; renderBibliotecaView(); }
+function setBibCategoriaFilter(cid){ bibCategoriaFilter=cid; renderBibliotecaView(); }
+function setBibNivelFilter(nid){ bibNivelFilter=nid; renderBibliotecaView(); }
 
 function buildArticuloCard(a){
   const open=openArticleIds.has(a.id);
@@ -1022,6 +1184,10 @@ function buildArticuloCard(a){
       <input class="art-input" value="${esc(a.link)}" placeholder="Link (DOI, PubMed, PDF…)" oninput="updateArticulo('${a.id}','link',this.value)">
       <div class="art-row-select">
         <select class="art-select" onchange="updateArticulo('${a.id}','zona',this.value)">${zonaOptionsHtml(a.zona)}</select>
+        <select class="art-select" onchange="updateArticulo('${a.id}','categoria',this.value)">${categoriaOptionsHtml(a.categoria)}</select>
+      </div>
+      <div class="art-row-select">
+        <select class="art-select" onchange="updateArticulo('${a.id}','nivel',this.value)">${nivelOptionsHtml(a.nivel)}</select>
         <div class="art-stars-edit">${starsEditHtml(a.id,a.rating)}</div>
       </div>
       <input class="art-input" value="${esc(a.tags)}" placeholder="Tags (separados por coma)" oninput="updateArticulo('${a.id}','tags',this.value)">
@@ -1043,7 +1209,7 @@ function toggleArticulo(id){
 function addArticulo(){
   const a={
     id: uid(), titulo:'', autorAnio:'', link:'', estado:'pendiente',
-    zona:'', tags:'', rating:0, resumen:'', citaClave:'',
+    zona:'', categoria:'', nivel:'', tags:'', rating:0, resumen:'', citaClave:'',
     fecha:new Date().toISOString().slice(0,10), fechaLeido:''
   };
   BIB.articulos.unshift(a);
