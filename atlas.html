@@ -8,10 +8,10 @@
 <meta http-equiv="Expires" content="0">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>Atlas Clínico · Casartelli</title>
+<title>Biblioteca · Casartelli</title>
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 36 36'%3E%3Crect width='36' height='36' rx='9' fill='%231B2A4A'/%3E%3Cpath d='M25 10.5C23.2 8.3 20.6 7 17.5 7 11.7 7 7 11.9 7 18s4.7 11 10.5 11c3.1 0 5.7-1.3 7.5-3.5' stroke='white' stroke-width='3' stroke-linecap='round' fill='none'/%3E%3Cpath d='M11 18h3.2l1.6-3.6 2.4 6.4 1.6-2.8h5.2' stroke='%23E87722' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' fill='none'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Lora:wght@500;600;700&display=swap" rel="stylesheet">
 <!-- Firebase (mismo proyecto que Consultorio, nodo raíz separado "atlas") -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
@@ -27,6 +27,7 @@ const firebaseConfig = {
 };
 firebase.initializeApp(firebaseConfig);
 const atlasRef = firebase.database().ref('atlas');
+const bibliotecaRef = firebase.database().ref('biblioteca');
 </script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
@@ -38,6 +39,13 @@ const atlasRef = firebase.database().ref('atlas');
   --blue-chip:#1A4E8C; --blue-chip-light:#EBF3FB;
   --radius:12px; --radius-sm:8px;
   --shadow:0 2px 12px rgba(0,0,0,.08); --shadow-lg:0 8px 32px rgba(0,0,0,.12);
+  /* Biblioteca: paleta cálida de lectura, distinta del Atlas clínico */
+  --paper-bg:#FAF6EE; --paper-surface:#F1EADA; --paper-border:#E2D8C2;
+  --ink:#2B241C; --ink-2:#6B6152; --ink-3:#9C927E;
+  --rust:#B15A2E; --rust-light:#F5E3D5; --gold:#B98A2E;
+  --pend:#B4791D; --pend-light:#FBF0DD;
+  --leyendo:#2F6690; --leyendo-light:#E3EEF5;
+  --leido:#3F7A52; --leido-light:#E7F3EA;
 }
 html,body{height:100%;font-family:'Inter',sans-serif;background:var(--surface);color:var(--text);-webkit-tap-highlight-color:transparent;}
 input,textarea,select{font-family:'Inter',sans-serif;}
@@ -162,6 +170,68 @@ textarea.autogrow{resize:none;overflow:hidden;}
 #app:not(.locked) .lock-hint{background:var(--orange-light);color:var(--orange);border-color:transparent;}
 @supports(padding:max(0px)){.panel{padding-bottom:max(40px,env(safe-area-inset-bottom));}}
 
+/* ── BIBLIOTECA (modo lectura) ── */
+.app.biblioteca-mode{background:var(--paper-bg);}
+.app.biblioteca-mode .topbar{background:var(--rust);}
+.btn-switch{background:rgba(255,255,255,.15);border:none;color:#fff;border-radius:8px;padding:7px 10px;font-size:12.5px;font-weight:600;flex-shrink:0;white-space:nowrap;font-family:Inter,sans-serif;}
+
+.bib-dash{display:flex;gap:8px;margin-bottom:14px;}
+.bib-stat{flex:1;background:var(--paper-surface);border:1px solid var(--paper-border);border-radius:var(--radius);padding:10px 8px;text-align:center;}
+.bib-stat-num{display:block;font-family:'Lora',serif;font-size:20px;font-weight:700;color:var(--rust);}
+.bib-stat-label{font-size:10px;color:var(--ink-2);text-transform:uppercase;letter-spacing:.05em;}
+
+.bib-search{width:100%;border:1px solid var(--paper-border);border-radius:var(--radius-sm);padding:10px 12px;font-size:13px;outline:none;margin-bottom:10px;background:#fff;color:var(--ink);font-family:Inter,sans-serif;}
+.bib-search:focus{border-color:var(--rust);}
+
+.bib-tabs{display:flex;gap:6px;margin-bottom:10px;overflow-x:auto;}
+.bib-tabs button{flex-shrink:0;border:1px solid var(--paper-border);background:#fff;color:var(--ink-2);padding:7px 12px;border-radius:20px;font-size:12px;font-weight:600;font-family:Inter,sans-serif;display:flex;align-items:center;gap:5px;}
+.bib-tabs button.on{background:var(--rust);border-color:var(--rust);color:#fff;}
+.tab-count{background:rgba(0,0,0,.08);border-radius:10px;padding:1px 6px;font-size:10.5px;}
+.bib-tabs button.on .tab-count{background:rgba(255,255,255,.25);}
+
+.bib-zona-filter{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px;}
+.zona-chip{font-size:11px;padding:5px 11px;border-radius:20px;font-weight:600;background:var(--paper-surface);color:var(--ink-2);border:1px solid var(--paper-border);cursor:pointer;}
+.zona-chip.on{background:var(--ink);color:#fff;border-color:var(--ink);}
+
+.bib-list{display:flex;flex-direction:column;gap:10px;margin-bottom:14px;}
+.art-card{border:1px solid var(--paper-border);border-radius:var(--radius);overflow:hidden;background:#fff;}
+.art-head{display:flex;align-items:center;gap:10px;padding:13px 14px;cursor:pointer;}
+.art-estado-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;}
+.art-estado-dot.estado-pendiente{background:var(--pend);}
+.art-estado-dot.estado-leyendo{background:var(--leyendo);}
+.art-estado-dot.estado-leido{background:var(--leido);}
+.art-title-block{flex:1;min-width:0;}
+.art-title-block h3{font-family:'Lora',serif;font-size:15px;font-weight:600;color:var(--ink);line-height:1.3;}
+.art-meta{font-size:11.5px;color:var(--ink-3);margin-top:2px;}
+.art-rating{font-size:11px;color:var(--gold);white-space:nowrap;flex-shrink:0;}
+.art-chevron{color:var(--ink-3);font-size:12px;transition:transform .15s;flex-shrink:0;}
+.art-card.open .art-chevron{transform:rotate(180deg);}
+.art-preview{font-size:12px;color:var(--ink-2);line-height:1.5;padding:0 14px 12px;margin-top:-4px;}
+.art-card.open .art-preview{display:none;}
+.art-body{display:none;padding:0 14px 14px;}
+.art-card.open .art-body{display:block;}
+
+.art-row-estado{display:flex;gap:6px;margin-bottom:10px;}
+.estado-btn{flex:1;border:1px solid var(--paper-border);background:var(--paper-surface);color:var(--ink-2);padding:7px 4px;border-radius:var(--radius-sm);font-size:11.5px;font-weight:600;font-family:Inter,sans-serif;}
+.estado-btn.on.pend{background:var(--pend-light);color:var(--pend);border-color:var(--pend);}
+.estado-btn.on.leyendo{background:var(--leyendo-light);color:var(--leyendo);border-color:var(--leyendo);}
+.estado-btn.on.leido{background:var(--leido-light);color:var(--leido);border-color:var(--leido);}
+
+.art-input{width:100%;border:1px solid var(--paper-border);border-radius:var(--radius-sm);padding:9px 10px;font-size:13px;color:var(--ink);outline:none;margin-bottom:8px;font-family:Inter,sans-serif;background:var(--paper-surface);}
+.art-input:focus{border-color:var(--rust);background:#fff;}
+.art-input.title{font-family:'Lora',serif;font-weight:600;font-size:14px;}
+.art-row-select{display:flex;gap:8px;margin-bottom:8px;}
+.art-select{flex:1;border:1px solid var(--paper-border);border-radius:var(--radius-sm);padding:9px 10px;font-size:12.5px;color:var(--ink);background:var(--paper-surface);font-family:Inter,sans-serif;}
+.art-stars-edit{display:flex;align-items:center;gap:2px;padding:0 6px;}
+.art-stars-edit span{font-size:16px;color:var(--paper-border);cursor:pointer;}
+.art-stars-edit span.filled{color:var(--gold);}
+.art-label{display:block;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-3);margin-bottom:5px;margin-top:8px;}
+.art-textarea{width:100%;border:1px solid var(--paper-border);border-radius:var(--radius-sm);padding:9px 10px;font-size:13px;line-height:1.55;color:var(--ink);outline:none;resize:none;overflow:hidden;font-family:Inter,sans-serif;background:var(--paper-surface);min-height:44px;}
+.art-textarea:focus{border-color:var(--rust);background:#fff;}
+.btn-del-article{width:100%;padding:8px;border:1.5px dashed var(--red);border-radius:var(--radius-sm);background:transparent;color:var(--red);font-size:12px;font-weight:600;font-family:Inter,sans-serif;margin-top:6px;}
+.btn-add-article{width:100%;padding:12px;border:1.5px dashed var(--rust);border-radius:var(--radius);background:var(--paper-surface);color:var(--rust);font-size:13px;font-weight:700;font-family:Inter,sans-serif;}
+.bib-empty{text-align:center;padding:40px 20px;color:var(--ink-3);font-size:13px;}
+
 /* ── TOAST ── */
 .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--navy);color:#fff;padding:10px 18px;border-radius:30px;font-size:13px;font-weight:500;opacity:0;transition:.25s;z-index:200;pointer-events:none;box-shadow:var(--shadow-lg);}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
@@ -172,8 +242,8 @@ textarea.autogrow{resize:none;overflow:hidden;}
 <div class="gate" id="gate">
   <div class="gate-box">
     <svg width="40" height="40" viewBox="0 0 36 36"><rect width="36" height="36" rx="9" fill="#1B2A4A"/><path d="M25 10.5C23.2 8.3 20.6 7 17.5 7 11.7 7 7 11.9 7 18s4.7 11 10.5 11c3.1 0 5.7-1.3 7.5-3.5" stroke="white" stroke-width="3" stroke-linecap="round" fill="none"/><path d="M11 18h3.2l1.6-3.6 2.4 6.4 1.6-2.8h5.2" stroke="#E87722" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
-    <h1>Atlas Clínico</h1>
-    <p>Casartelli · uso personal</p>
+    <h1>Biblioteca</h1>
+    <p>Casartelli · lectura + atlas clínico</p>
     <input type="password" id="gatePass" placeholder="Contraseña" onkeydown="if(event.key==='Enter')checkGate()">
     <button onclick="checkGate()">Entrar</button>
     <div class="gate-err" id="gateErr">Contraseña incorrecta.</div>
@@ -182,12 +252,13 @@ textarea.autogrow{resize:none;overflow:hidden;}
 
 <div class="app" id="app" style="display:none;">
   <div class="topbar">
-    <button class="btn-back" id="btnBack" style="display:none;" onclick="goHome()">← Cuerpo</button>
+    <button class="btn-back" id="btnBack" style="display:none;" onclick="goBack()">← Cuerpo</button>
     <div style="flex:1;">
-      <h1 id="topTitle">Atlas Clínico</h1>
-      <p id="topSub">Casartelli · MP 10722</p>
+      <h1 id="topTitle">Biblioteca</h1>
+      <p id="topSub">Casartelli · lectura clínica</p>
     </div>
-    <button class="btn-lock" id="btnLock" onclick="toggleEditMode()" title="Bloquear/desbloquear edición">🔒</button>
+    <button class="btn-switch" id="btnSwitch" onclick="goToAtlas()" title="Ir al Atlas de lesiones">🩻 Atlas</button>
+    <button class="btn-lock" id="btnLock" style="display:none;" onclick="toggleEditMode()" title="Bloquear/desbloquear edición">🔒</button>
   </div>
   <div class="panel" id="panel"></div>
 </div>
@@ -202,6 +273,16 @@ let openLesionIds = new Set();
 let autoSaveTimer = null;
 let viewMode = 'full'; // 'full' | 'compact'
 let editMode = localStorage.getItem('atlas_edit_mode')==='1'; // bloqueado por defecto
+
+// Biblioteca (pantalla principal de la app)
+let screen = 'biblioteca'; // 'biblioteca' | 'atlas'
+let BIB = { articulos: [] };
+let bibFilter = 'pendiente'; // 'pendiente' | 'leyendo' | 'leido' | 'todos'
+let bibZonaFilter = '';
+let openArticleIds = new Set();
+let bibSaveTimer = null;
+function bibSaveDB(){ bibliotecaRef.set(BIB); }
+function debBibSave(){ clearTimeout(bibSaveTimer); bibSaveTimer=setTimeout(bibSaveDB,700); }
 
 function uid(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,7); }
 function esc(s){ return (s==null?'':String(s)).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
@@ -253,9 +334,26 @@ const ZONAS = [
 ];
 const ZONA_LABELS = {};
 ZONAS.forEach(z=>ZONA_LABELS[z.id]=z.label);
+const CLINICAL_ZONAS = [...new Map(ZONAS.map(z=>[z.id,z])).values()];
 
 function initApp(){
   document.getElementById('panel').innerHTML=`<div class="empty-zona">Cargando…</div>`;
+
+  bibliotecaRef.on('value', snap=>{
+    const val=snap.val();
+    BIB = (val && val.articulos) ? val : { articulos: [] };
+    if(screen==='biblioteca') render();
+  }, err=>{
+    if(screen==='biblioteca') document.getElementById('panel').innerHTML=`
+      <div class="empty-zona" style="color:var(--red);text-align:left;line-height:1.6;">
+        <b>No se pudo conectar con la base de datos.</b><br><br>
+        Error: ${esc(err.message)}<br><br>
+        Lo más probable es que las reglas de Firebase no dejen leer/escribir el nodo <code>biblioteca</code>.
+        Entrá a Firebase Console → Realtime Database → Rules y agregá un bloque para <code>biblioteca</code>
+        igual al que ya tenés para <code>consultorio</code> y <code>atlas</code>.
+      </div>`;
+  });
+
   atlasRef.on('value', snap=>{
     const val=snap.val();
     if(!val){
@@ -266,9 +364,9 @@ function initApp(){
       if(!DATA.zonas) DATA.zonas = {};
       migrateNewZonas();
     }
-    render();
+    if(screen==='atlas') render();
   }, err=>{
-    document.getElementById('panel').innerHTML=`
+    if(screen==='atlas') document.getElementById('panel').innerHTML=`
       <div class="empty-zona" style="color:var(--red);text-align:left;line-height:1.6;">
         <b>No se pudo conectar con la base de datos.</b><br><br>
         Error: ${esc(err.message)}<br><br>
@@ -520,7 +618,11 @@ function seedDefaultData(){
 
 function render(){
   applyEditModeUI();
-  if(currentZona) renderZonaView(); else renderBodyView();
+  const app=document.getElementById('app');
+  if(app) app.classList.toggle('biblioteca-mode', screen==='biblioteca');
+  if(screen==='biblioteca'){ renderBibliotecaView(); }
+  else if(currentZona){ renderZonaView(); }
+  else { renderBodyView(); }
 }
 
 function toggleEditMode(){
@@ -540,9 +642,22 @@ function applyEditModeUI(){
 
 function goHome(){ currentZona=null; render(); }
 
+// Navegación entre Biblioteca (pantalla principal) y Atlas de lesiones (secundaria)
+function goToAtlas(){ screen='atlas'; currentZona=null; render(); }
+function goToBiblioteca(){ screen='biblioteca'; render(); }
+function goBack(){
+  if(screen==='atlas'){
+    if(currentZona) goHome();
+    else goToBiblioteca();
+  }
+}
+
 // ══════════════════ VISTA: CUERPO ══════════════════
 function renderBodyView(){
-  document.getElementById('btnBack').style.display='none';
+  document.getElementById('btnBack').style.display='inline-block';
+  document.getElementById('btnBack').textContent='← Biblioteca';
+  document.getElementById('btnSwitch').style.display='none';
+  document.getElementById('btnLock').style.display='inline-block';
   document.getElementById('topTitle').textContent='Atlas Clínico';
   document.getElementById('topSub').textContent='Casartelli · MP 10722';
 
@@ -620,6 +735,9 @@ function getZonaData(zonaId){
 
 function renderZonaView(){
   document.getElementById('btnBack').style.display='inline-block';
+  document.getElementById('btnBack').textContent='← Cuerpo';
+  document.getElementById('btnSwitch').style.display='none';
+  document.getElementById('btnLock').style.display='inline-block';
   document.getElementById('topTitle').textContent=ZONA_LABELS[currentZona]||'Zona';
   document.getElementById('topSub').textContent='Lesiones, evaluación, evolución, manejo, casos y papers';
 
@@ -793,6 +911,174 @@ function updateSubItem(lesionId,key,idx,field,val){
   const l=z.lesiones.find(x=>x.id===lesionId); if(!l||!l[key]||!l[key][idx]) return;
   l[key][idx][field]=val;
   debSave();
+}
+
+// ══════════════════ VISTA: BIBLIOTECA ══════════════════
+function truncate(s,n){ s=s||''; return s.length>n ? s.slice(0,n).trim()+'…' : s; }
+
+function zonaOptionsHtml(selected){
+  return `<option value="">Zona clínica (opcional)</option>` +
+    CLINICAL_ZONAS.map(z=>`<option value="${z.id}" ${z.id===selected?'selected':''}>${esc(z.label)}</option>`).join('');
+}
+
+function starsHtml(rating){
+  rating=rating||0;
+  let out='';
+  for(let i=1;i<=5;i++) out += i<=rating ? '★' : '☆';
+  return out;
+}
+function starsEditHtml(id,rating){
+  rating=rating||0;
+  let out='';
+  for(let i=1;i<=5;i++){
+    out += `<span class="${i<=rating?'filled':''}" onclick="event.stopPropagation();setArticuloRating('${id}',${i})">★</span>`;
+  }
+  return out;
+}
+
+function renderBibliotecaView(){
+  document.getElementById('btnBack').style.display='none';
+  document.getElementById('btnSwitch').style.display='inline-block';
+  document.getElementById('btnSwitch').textContent='🩻 Atlas';
+  document.getElementById('btnLock').style.display='none';
+
+  const pendCount=BIB.articulos.filter(a=>a.estado==='pendiente').length;
+  const leyendoCount=BIB.articulos.filter(a=>a.estado==='leyendo').length;
+  const leidoCount=BIB.articulos.filter(a=>a.estado==='leido').length;
+  const mesActual=new Date().toISOString().slice(0,7);
+  const leidoMesCount=BIB.articulos.filter(a=>a.estado==='leido' && a.fechaLeido && a.fechaLeido.slice(0,7)===mesActual).length;
+
+  document.getElementById('topTitle').textContent='Biblioteca';
+  document.getElementById('topSub').textContent=`${pendCount} pendientes · ${leyendoCount} leyendo · ${leidoMesCount} leídos este mes`;
+
+  const q=(document.getElementById('bibSearchInput')?document.getElementById('bibSearchInput').value:'').toLowerCase();
+
+  let list=BIB.articulos.slice();
+  if(bibFilter!=='todos') list=list.filter(a=>a.estado===bibFilter);
+  if(bibZonaFilter) list=list.filter(a=>a.zona===bibZonaFilter);
+  if(q) list=list.filter(a=>
+    (a.titulo||'').toLowerCase().includes(q) ||
+    (a.autorAnio||'').toLowerCase().includes(q) ||
+    (a.tags||'').toLowerCase().includes(q) ||
+    (a.resumen||'').toLowerCase().includes(q)
+  );
+  list.sort((a,b)=>(b.fecha||'').localeCompare(a.fecha||''));
+
+  const zonasPresentes=[...new Set(BIB.articulos.map(a=>a.zona).filter(Boolean))];
+  const zonaChipsHtml = zonasPresentes.length ? `
+    <div class="bib-zona-filter">
+      <span class="zona-chip ${bibZonaFilter===''?'on':''}" onclick="setBibZonaFilter('')">Todas</span>
+      ${zonasPresentes.map(zid=>`<span class="zona-chip ${bibZonaFilter===zid?'on':''}" onclick="setBibZonaFilter('${zid}')">${esc(ZONA_LABELS[zid]||zid)}</span>`).join('')}
+    </div>` : '';
+
+  const cardsHtml = list.length ? list.map(a=>buildArticuloCard(a)).join('') :
+    `<div class="bib-empty">${BIB.articulos.length?'No hay artículos que matcheen el filtro.':'Todavía no cargaste artículos. Tocá "+ Agregar artículo" para empezar.'}</div>`;
+
+  document.getElementById('panel').innerHTML=`
+    <div class="bib-dash">
+      <div class="bib-stat"><span class="bib-stat-num">${pendCount}</span><span class="bib-stat-label">Pendientes</span></div>
+      <div class="bib-stat"><span class="bib-stat-num">${leyendoCount}</span><span class="bib-stat-label">Leyendo</span></div>
+      <div class="bib-stat"><span class="bib-stat-num">${leidoMesCount}</span><span class="bib-stat-label">Leídos/mes</span></div>
+    </div>
+    <input class="bib-search" id="bibSearchInput" placeholder="Buscar por título, autor, tag…" value="${esc(q)}" oninput="renderBibliotecaView()">
+    <div class="bib-tabs">
+      <button class="${bibFilter==='pendiente'?'on':''}" onclick="setBibFilter('pendiente')">Pendiente <span class="tab-count">${pendCount}</span></button>
+      <button class="${bibFilter==='leyendo'?'on':''}" onclick="setBibFilter('leyendo')">Leyendo <span class="tab-count">${leyendoCount}</span></button>
+      <button class="${bibFilter==='leido'?'on':''}" onclick="setBibFilter('leido')">Leído <span class="tab-count">${leidoCount}</span></button>
+      <button class="${bibFilter==='todos'?'on':''}" onclick="setBibFilter('todos')">Todos</button>
+    </div>
+    ${zonaChipsHtml}
+    <div class="bib-list">${cardsHtml}</div>
+    <button class="btn-add-article" onclick="addArticulo()">+ Agregar artículo</button>
+  `;
+  autoGrowAll();
+}
+
+function setBibFilter(f){ bibFilter=f; renderBibliotecaView(); }
+function setBibZonaFilter(zid){ bibZonaFilter=zid; renderBibliotecaView(); }
+
+function buildArticuloCard(a){
+  const open=openArticleIds.has(a.id);
+  return `
+  <div class="art-card ${open?'open':''}" id="art_${a.id}">
+    <div class="art-head" onclick="toggleArticulo('${a.id}')">
+      <span class="art-estado-dot estado-${a.estado||'pendiente'}"></span>
+      <div class="art-title-block">
+        <h3>${esc(a.titulo)||'Sin título'}</h3>
+        <p class="art-meta">${esc(a.autorAnio)}</p>
+      </div>
+      <div class="art-rating">${starsHtml(a.rating)}</div>
+      <span class="art-chevron">▾</span>
+    </div>
+    ${a.resumen?`<div class="art-preview">${esc(truncate(a.resumen,120))}</div>`:''}
+    <div class="art-body">
+      <div class="art-row-estado">
+        <button class="estado-btn ${a.estado==='pendiente'?'on pend':''}" onclick="setArticuloEstado('${a.id}','pendiente')">Pendiente</button>
+        <button class="estado-btn ${a.estado==='leyendo'?'on leyendo':''}" onclick="setArticuloEstado('${a.id}','leyendo')">Leyendo</button>
+        <button class="estado-btn ${a.estado==='leido'?'on leido':''}" onclick="setArticuloEstado('${a.id}','leido')">Leído</button>
+      </div>
+      <input class="art-input title" value="${esc(a.titulo)}" placeholder="Título del artículo" oninput="updateArticulo('${a.id}','titulo',this.value)">
+      <input class="art-input" value="${esc(a.autorAnio)}" placeholder="Autor, año" oninput="updateArticulo('${a.id}','autorAnio',this.value)">
+      <input class="art-input" value="${esc(a.link)}" placeholder="Link (DOI, PubMed, PDF…)" oninput="updateArticulo('${a.id}','link',this.value)">
+      <div class="art-row-select">
+        <select class="art-select" onchange="updateArticulo('${a.id}','zona',this.value)">${zonaOptionsHtml(a.zona)}</select>
+        <div class="art-stars-edit">${starsEditHtml(a.id,a.rating)}</div>
+      </div>
+      <input class="art-input" value="${esc(a.tags)}" placeholder="Tags (separados por coma)" oninput="updateArticulo('${a.id}','tags',this.value)">
+      <label class="art-label">Resumen / conclusión clave</label>
+      <textarea class="art-textarea autogrow" placeholder="De qué trata, qué encontraron, por qué importa…" oninput="autoGrow(this);updateArticulo('${a.id}','resumen',this.value)">${esc(a.resumen)}</textarea>
+      <label class="art-label">Cita / dato clave</label>
+      <textarea class="art-textarea autogrow" placeholder="Un dato o cifra para recordar…" oninput="autoGrow(this);updateArticulo('${a.id}','citaClave',this.value)">${esc(a.citaClave)}</textarea>
+      <button class="btn-del-article" onclick="deleteArticulo('${a.id}')">Eliminar artículo</button>
+    </div>
+  </div>`;
+}
+
+function toggleArticulo(id){
+  if(openArticleIds.has(id)) openArticleIds.delete(id); else openArticleIds.add(id);
+  const el=document.getElementById('art_'+id);
+  if(el) el.classList.toggle('open', openArticleIds.has(id));
+}
+
+function addArticulo(){
+  const a={
+    id: uid(), titulo:'', autorAnio:'', link:'', estado:'pendiente',
+    zona:'', tags:'', rating:0, resumen:'', citaClave:'',
+    fecha:new Date().toISOString().slice(0,10), fechaLeido:''
+  };
+  BIB.articulos.unshift(a);
+  openArticleIds.add(a.id);
+  bibFilter='pendiente';
+  bibSaveDB();
+  renderBibliotecaView();
+}
+
+function deleteArticulo(id){
+  if(!confirm('¿Eliminar este artículo? No se puede deshacer.')) return;
+  BIB.articulos=BIB.articulos.filter(a=>a.id!==id);
+  bibSaveDB();
+  renderBibliotecaView();
+}
+
+function updateArticulo(id,field,val){
+  const a=BIB.articulos.find(x=>x.id===id); if(!a) return;
+  a[field]=val;
+  debBibSave();
+}
+
+function setArticuloEstado(id,estado){
+  const a=BIB.articulos.find(x=>x.id===id); if(!a) return;
+  a.estado=estado;
+  if(estado==='leido' && !a.fechaLeido) a.fechaLeido=new Date().toISOString().slice(0,10);
+  bibSaveDB();
+  renderBibliotecaView();
+}
+
+function setArticuloRating(id,rating){
+  const a=BIB.articulos.find(x=>x.id===id); if(!a) return;
+  a.rating = (a.rating===rating) ? 0 : rating; // tocar la misma estrella la desmarca
+  bibSaveDB();
+  renderBibliotecaView();
 }
 </script>
 </body>
