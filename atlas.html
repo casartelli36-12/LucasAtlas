@@ -183,6 +183,11 @@ textarea.autogrow{resize:none;overflow:hidden;}
 .bib-search{width:100%;border:1px solid var(--paper-border);border-radius:var(--radius-sm);padding:10px 12px;font-size:13px;outline:none;margin-bottom:10px;background:#fff;color:var(--ink);font-family:Inter,sans-serif;}
 .bib-search:focus{border-color:var(--rust);}
 
+.bib-seccion-toggle{display:flex;background:var(--paper-surface);border:1px solid var(--paper-border);border-radius:30px;padding:3px;margin-bottom:14px;}
+.bib-seccion-toggle button{flex:1;border:none;background:transparent;padding:9px 6px;font-size:12.5px;font-weight:600;color:var(--ink-2);border-radius:24px;font-family:Inter,sans-serif;}
+.bib-seccion-toggle button.on{background:var(--rust);color:#fff;}
+.bib-tesis-note{font-size:11.5px;color:var(--ink-2);background:var(--rust-light);border-radius:var(--radius-sm);padding:9px 11px;margin-bottom:12px;line-height:1.5;}
+
 .bib-tabs{display:flex;gap:6px;margin-bottom:10px;overflow-x:auto;}
 .bib-tabs button{flex-shrink:0;border:1px solid var(--paper-border);background:#fff;color:var(--ink-2);padding:7px 12px;border-radius:20px;font-size:12px;font-weight:600;font-family:Inter,sans-serif;display:flex;align-items:center;gap:5px;}
 .bib-tabs button.on{background:var(--rust);border-color:var(--rust);color:#fff;}
@@ -279,6 +284,7 @@ let editMode = localStorage.getItem('atlas_edit_mode')==='1'; // bloqueado por d
 let screen = 'biblioteca'; // 'biblioteca' | 'atlas'
 let BIB = { articulos: [] };
 let bibFilter = 'pendiente'; // 'pendiente' | 'leyendo' | 'leido' | 'todos'
+let bibSeccion = 'general'; // 'general' | 'tesis'
 let bibZonaFilter = '';
 let bibCategoriaFilter = '';
 let bibNivelFilter = '';
@@ -976,9 +982,9 @@ function migrateBiblioteca(){
 }
 
 function seedDefaultBiblioteca(){
-  const mk=(titulo,autorAnio,link,zona,categoria,nivel,tags,resumen,citaClave)=>({
+  const mk=(titulo,autorAnio,link,zona,categoria,nivel,tags,resumen,citaClave,coleccion='')=>({
     id: uid(), titulo, autorAnio, link, estado:'pendiente', zona, categoria, nivel, tags,
-    rating:0, resumen, citaClave,
+    rating:0, resumen, citaClave, coleccion,
     fecha:new Date().toISOString().slice(0,10), fechaLeido:''
   });
   return { articulos: [
@@ -1041,7 +1047,45 @@ function seedDefaultBiblioteca(){
       'Clasificar el dolor inguinal por estructura implicada (aductores/psoas/inguinal/pubis/cadera) en vez de usar "pubalgia" como cajón de sastre mejora tanto el diagnóstico como la comparación entre estudios.'),
     mk('Ejercicio de control motor para el dolor lumbar crónico no específico (revisión Cochrane)','Saragiotto et al., 2016','https://doi.org/10.1002/14651858.CD012004','columna','otro','rs','lumbalgia, control motor, Cochrane, ejercicio',
       'Revisión Cochrane que evalúa el ejercicio de control motor (activación de musculatura profunda del tronco, progresando a tareas funcionales) frente a otras intervenciones o placebo en lumbalgia crónica no específica. Encuentra beneficios modestos pero consistentes en dolor y discapacidad, sin ser claramente superior a otras formas de ejercicio bien indicadas.',
-      'El ejercicio de control motor tiene efectos modestos pero reales sobre dolor y discapacidad en lumbalgia crónica; no parece superar a otras modalidades de ejercicio bien prescriptas, lo que refuerza que "qué ejercicio" importa menos que "hacerlo bien y de forma sostenida".')
+      'El ejercicio de control motor tiene efectos modestos pero reales sobre dolor y discapacidad en lumbalgia crónica; no parece superar a otras modalidades de ejercicio bien prescriptas, lo que refuerza que "qué ejercicio" importa menos que "hacerlo bien y de forma sostenida".'),
+
+    // ── MI TESIS: BFR y fuerza de cuádriceps post-LCA (12 RCT, revisión narrativa) ──
+    mk('Entrenamiento de fuerza de baja carga con restricción moderada del flujo sanguíneo tras reconstrucción de LCA','Ohta et al., 2003','https://doi.org/10.1080/00016470310013680','rodilla','fuerza','rct','BFR, LCA, cuádriceps, fuerza',
+      'El primer RCT que aplicó BFR a la rehabilitación de LCA: 16 semanas de entrenamiento de baja carga con oclusión moderada vs. el mismo entrenamiento sin oclusión. El grupo BFR mostró mayor recuperación de torque isocinético en extensión y flexión de rodilla que el control.',
+      'A las 16 semanas, el grupo BFR ganó ≈20,7% de torque en extensión y ≈18,9% en flexión, frente a ≈9,4% en el grupo control.', 'tesis'),
+    mk('Comparación de BFR vs. entrenamiento tradicional de carga alta en la rehabilitación post-quirúrgica de LCA (NHS trial)','Hughes et al., 2019','https://doi.org/10.1007/s40279-019-01137-2','rodilla','fuerza','rct','BFR, LCA, cuádriceps, carga alta',
+      'Ensayo del servicio de salud del Reino Unido que comparó BFR de baja carga (30% 1RM) contra entrenamiento tradicional de carga alta (70% 1RM), 8 semanas post-quirúrgicas. Las ganancias de fuerza en 10RM fueron similares entre grupos, con una ventaja del grupo BFR en fuerza isocinética a velocidades altas.',
+      'BFR con 30% de 1RM logró ganancias de fuerza equivalentes al entrenamiento tradicional con 70% de 1RM, bajo mucho menor carga mecánica sobre la rodilla operada.', 'tesis'),
+    mk('BFR aplicado con ejercicio de alta intensidad no mejora la función del cuádriceps tras reconstrucción de LCA','Curran et al., 2020','https://doi.org/10.1177/0363546520904008','rodilla','fuerza','rct','BFR, LCA, cuádriceps, alta intensidad',
+      'A diferencia de otros estudios, este RCT combinó BFR con ejercicio ya de alta intensidad (70% 1RM) en vez de baja carga. No encontró diferencias significativas en fuerza isométrica, 1RM ni masa de recto femoral entre el grupo BFR y el control.',
+      'Sumar BFR a un entrenamiento que ya es de alta intensidad no aportó beneficio adicional — el valor del BFR parece estar en permitir ganancias similares usando cargas bajas, no en sumarse a cargas ya altas.', 'tesis'),
+    mk('Efecto del entrenamiento con BFR sobre fuerza, morfología y biomecánica de rodilla antes y después de reconstrucción de LCA','Erickson et al., 2025','https://doi.org/10.1249/MSS.0000000000003573','rodilla','fuerza','rct','BFR, LCA, cuádriceps, prequirúrgico',
+      'Ensayo doble ciego controlado con placebo (BFR real vs. BFR simulado) que incluyó una fase preoperatoria de un mes además del postoperatorio. El grupo BFR mostró mayor fuerza y área de sección transversal del cuádriceps que el grupo placebo a los 4-5 meses.',
+      'Aplicar BFR también en la fase prequirúrgica (no solo después) mostró diferencias a favor del grupo BFR tanto en fuerza como en área de sección transversal del cuádriceps.', 'tesis'),
+    mk('Comparación de fuerza de cuádriceps e isquiotibiales con y sin BFR tras cirugía de LCA','Vieira de Melo et al., 2022','https://doi.org/10.2340/jrm.v54.2550','rodilla','fuerza','rct','BFR, LCA, cuádriceps, isquiotibiales',
+      'RCT brasileño de 12 semanas comparando ejercicio con BFR (30% 1RM) contra ejercicio sin BFR de mayor carga (70% 1RM). El grupo BFR mostró mayor ganancia de fuerza isocinética de cuádriceps que el grupo control, con diferencia significativa desde la segunda mitad del programa.',
+      'El grupo BFR superó en ganancia de fuerza isocinética al grupo de carga alta tradicional (≈24% vs. ≈10%), con la diferencia haciéndose significativa a partir de la semana 12.', 'tesis'),
+    mk('Efecto del entrenamiento de cuádriceps con distintos niveles de BFR sobre fuerza y grosor muscular tras LCA (estudio piloto)','Li X et al., 2023','https://doi.org/10.1186/s12891-023-06483-x','rodilla','fuerza','rct','BFR, LCA, cuádriceps, presión de oclusión',
+      'Estudio piloto controlado que comparó dos niveles de presión de oclusión (40% y 80% de presión arterial de oclusión) contra un grupo control sin BFR, en el período postoperatorio medio. Buscó establecer si la magnitud de la oclusión influye en los resultados de fuerza y grosor muscular.',
+      'Comparar distintos niveles de presión de oclusión (no solo BFR sí/no) ayuda a entender si "más oclusión" es realmente "mejor resultado", una pregunta todavía abierta en la dosificación del BFR.', 'tesis'),
+    mk('Entrenamiento con BFR para mejorar la función del cuádriceps tras reconstrucción de LCA (ensayo doble ciego controlado con placebo)','Ohlsen et al., 2025','https://doi.org/10.7759/cureus.79821','rodilla','fuerza','rct','BFR, LCA, cuádriceps, placebo',
+      'Ensayo piloto doble ciego con grupo placebo (manguito con presión mínima) que evaluó fuerza, morfología, fisiología muscular y biomecánica de rodilla en atletas tras LCA. Aporta un diseño más riguroso (verdadero placebo) que muchos estudios previos de BFR.',
+      'El uso de un grupo placebo verdadero (no solo "sin BFR") fortalece la evidencia sobre qué efectos son atribuibles específicamente a la oclusión y cuáles a la expectativa o al ejercicio en sí.', 'tesis'),
+    mk('Entrenamiento con BFR combinado con educación cruzada para la recuperación del cuádriceps tras LCA','Sevinc et al., 2025','https://doi.org/10.1002/ksa.12553','rodilla','fuerza','rct','BFR, LCA, cuádriceps, educación cruzada',
+      'RCT que evaluó si combinar BFR con "educación cruzada" (entrenar la pierna sana para generar transferencia neural a la pierna operada) mejora la recuperación de fuerza de cuádriceps más que BFR solo, en pacientes con injerto de isquiotibiales.',
+      'Combinar BFR con entrenamiento de la pierna no operada (educación cruzada) es una estrategia novedosa para potenciar la recuperación de fuerza en la pierna operada, aprovechando la transferencia neural entre miembros.', 'tesis'),
+    mk('Efecto de un programa perioperatorio de BFR sobre la fuerza temprana de cuádriceps y resultados reportados por el paciente tras LCA','Okoroha et al., 2023','https://doi.org/10.1177/23259671231209694','rodilla','fuerza','rct','BFR, LCA, cuádriceps, perioperatorio',
+      'RCT que aplicó BFR tanto antes como después de la cirugía de LCA (programa perioperatorio), evaluando fuerza isométrica postoperatoria temprana y resultados reportados por el paciente frente a un grupo control sin BFR.',
+      'Iniciar el BFR antes de la cirugía (no solo después) es otra variante de dosificación/timing que este estudio pone a prueba, con foco en resultados tempranos y reportados por el propio paciente.', 'tesis'),
+    mk('Uso temprano de BFR con ejercicios de baja intensidad tras LCA: mejora en fuerza de cuádriceps y dolor postoperatorio','Curley et al., 2021','https://doi.org/10.1177/2325967121S00226','rodilla','fuerza','rct','BFR, LCA, cuádriceps, dolor postoperatorio',
+      'RCT que aplicó BFR con ejercicios de baja carga (20-50% 1RM) desde el período postoperatorio agudo, comparado con rehabilitación tradicional sin BFR. El grupo BFR mostró menor dolor (EVA) a las 6 semanas y mayor fuerza de extensión de rodilla a las 8, 10 y 12 semanas.',
+      '⚠️ En las bases de citas este trabajo figura publicado en 2021 (resumen de congreso AOSSM/AANA), no 2023 — convendría chequear el año exacto en tu propia lista de referencias.', 'tesis'),
+    mk('Efectos del ejercicio de rehabilitación con BFR tras reconstrucción de LCA','Jung et al., 2022','https://doi.org/10.3390/APP122312058','rodilla','fuerza','rct','BFR, LCA, cuádriceps, EMG',
+      'RCT que evaluó el efecto del entrenamiento con BFR sobre torque pico, área de sección transversal y actividad electromiográfica del cuádriceps tras reconstrucción de LCA, comparado con el mismo ejercicio sin oclusión.',
+      'El grupo BFR mostró mejoras en torque pico (≈16,5% a 60°/s) y en área de sección transversal (≈12,3%), junto con mayor amplitud EMG del cuádriceps, sugiriendo beneficio tanto estructural como neuromuscular.', 'tesis'),
+    mk('Efecto del entrenamiento con BFR en la rehabilitación postoperatoria temprana tras LCA','Barzyk et al., 2026','https://doi.org/10.3389/fspor.2025.1689257','rodilla','fuerza','rct','BFR, LCA, cuádriceps, rehabilitación temprana',
+      'El más reciente de los 12: RCT que evalúa si sumar BFR al entrenamiento de baja carga aporta beneficio adicional frente a entrenamiento de baja carga sin BFR, en la fase postoperatoria temprana tras reconstrucción de LCA.',
+      'Al ser el estudio más reciente de tu revisión, conviene chequear si aporta un dato que reordene la síntesis general (p.ej. si confirma o contradice la tendencia de los demás RCT).', 'tesis')
   ]};
 }
 
@@ -1081,18 +1125,24 @@ function renderBibliotecaView(){
   document.getElementById('btnSwitch').textContent='🩻 Atlas';
   document.getElementById('btnLock').style.display='none';
 
-  const pendCount=BIB.articulos.filter(a=>a.estado==='pendiente').length;
-  const leyendoCount=BIB.articulos.filter(a=>a.estado==='leyendo').length;
-  const leidoCount=BIB.articulos.filter(a=>a.estado==='leido').length;
-  const mesActual=new Date().toISOString().slice(0,7);
-  const leidoMesCount=BIB.articulos.filter(a=>a.estado==='leido' && a.fechaLeido && a.fechaLeido.slice(0,7)===mesActual).length;
+  // Sección activa: Biblioteca general (todo lo que NO es de tesis) o Mi Tesis
+  // (exclusivamente los artículos marcados coleccion:'tesis'), nunca se mezclan.
+  const sectionArticulos = bibSeccion==='tesis'
+    ? BIB.articulos.filter(a=>a.coleccion==='tesis')
+    : BIB.articulos.filter(a=>a.coleccion!=='tesis');
 
-  document.getElementById('topTitle').textContent='Biblioteca';
+  const pendCount=sectionArticulos.filter(a=>a.estado==='pendiente').length;
+  const leyendoCount=sectionArticulos.filter(a=>a.estado==='leyendo').length;
+  const leidoCount=sectionArticulos.filter(a=>a.estado==='leido').length;
+  const mesActual=new Date().toISOString().slice(0,7);
+  const leidoMesCount=sectionArticulos.filter(a=>a.estado==='leido' && a.fechaLeido && a.fechaLeido.slice(0,7)===mesActual).length;
+
+  document.getElementById('topTitle').textContent = bibSeccion==='tesis' ? 'Mi Tesis' : 'Biblioteca';
   document.getElementById('topSub').textContent=`${pendCount} pendientes · ${leyendoCount} leyendo · ${leidoMesCount} leídos este mes`;
 
   const q=(document.getElementById('bibSearchInput')?document.getElementById('bibSearchInput').value:'').toLowerCase();
 
-  let list=BIB.articulos.slice();
+  let list=sectionArticulos.slice();
   if(bibFilter!=='todos') list=list.filter(a=>a.estado===bibFilter);
   if(bibZonaFilter) list=list.filter(a=>a.zona===bibZonaFilter);
   if(bibCategoriaFilter) list=list.filter(a=>a.categoria===bibCategoriaFilter);
@@ -1105,7 +1155,7 @@ function renderBibliotecaView(){
   );
   list.sort((a,b)=>(b.fecha||'').localeCompare(a.fecha||''));
 
-  const zonasPresentes=[...new Set(BIB.articulos.map(a=>a.zona).filter(Boolean))];
+  const zonasPresentes=[...new Set(sectionArticulos.map(a=>a.zona).filter(Boolean))];
   const zonaChipsHtml = zonasPresentes.length ? `
     <div class="bib-zona-filter">
       <span class="filter-label">Zona:</span>
@@ -1113,26 +1163,34 @@ function renderBibliotecaView(){
       ${zonasPresentes.map(zid=>`<span class="zona-chip ${bibZonaFilter===zid?'on':''}" onclick="setBibZonaFilter('${zid}')">${esc(ZONA_LABELS[zid]||zid)}</span>`).join('')}
     </div>` : '';
 
-  const categoriasPresentes=[...new Set(BIB.articulos.map(a=>a.categoria).filter(Boolean))];
-  const categoriaChipsHtml = categoriasPresentes.length ? `
+  const categoriasPresentes=[...new Set(sectionArticulos.map(a=>a.categoria).filter(Boolean))];
+  const categoriaChipsHtml = categoriasPresentes.length>1 ? `
     <div class="bib-zona-filter">
       <span class="filter-label">Tema:</span>
       <span class="zona-chip ${bibCategoriaFilter===''?'on':''}" onclick="setBibCategoriaFilter('')">Todos</span>
       ${categoriasPresentes.map(cid=>`<span class="zona-chip ${bibCategoriaFilter===cid?'on':''}" onclick="setBibCategoriaFilter('${cid}')">${esc(CATEGORIA_LABELS[cid]||cid)}</span>`).join('')}
     </div>` : '';
 
-  const nivelesPresentes=[...new Set(BIB.articulos.map(a=>a.nivel).filter(Boolean))];
-  const nivelChipsHtml = nivelesPresentes.length ? `
+  const nivelesPresentes=[...new Set(sectionArticulos.map(a=>a.nivel).filter(Boolean))];
+  const nivelChipsHtml = nivelesPresentes.length>1 ? `
     <div class="bib-zona-filter">
       <span class="filter-label">Nivel:</span>
       <span class="zona-chip ${bibNivelFilter===''?'on':''}" onclick="setBibNivelFilter('')">Todos</span>
       ${nivelesPresentes.map(nid=>`<span class="zona-chip ${bibNivelFilter===nid?'on':''}" onclick="setBibNivelFilter('${nid}')">${esc(NIVEL_LABELS[nid]||nid)}</span>`).join('')}
     </div>` : '';
 
+  const tesisNoteHtml = bibSeccion==='tesis' ? `
+    <div class="bib-tesis-note">🎓 Los 12 RCT de tu revisión narrativa (BFR y fuerza de cuádriceps post-LCA). Excluye Iversen et al. (2016) por evaluar atrofia (CSA), no fuerza — igual que en tu tesis.</div>` : '';
+
   const cardsHtml = list.length ? list.map(a=>buildArticuloCard(a)).join('') :
-    `<div class="bib-empty">${BIB.articulos.length?'No hay artículos que matcheen el filtro.':'Todavía no cargaste artículos. Tocá "+ Agregar artículo" para empezar.'}</div>`;
+    `<div class="bib-empty">${sectionArticulos.length?'No hay artículos que matcheen el filtro.':'Todavía no hay artículos acá.'}</div>`;
 
   document.getElementById('panel').innerHTML=`
+    <div class="bib-seccion-toggle">
+      <button class="${bibSeccion==='general'?'on':''}" onclick="setBibSeccion('general')">📚 Biblioteca</button>
+      <button class="${bibSeccion==='tesis'?'on':''}" onclick="setBibSeccion('tesis')">🎓 Mi Tesis</button>
+    </div>
+    ${tesisNoteHtml}
     <div class="bib-dash">
       <div class="bib-stat"><span class="bib-stat-num">${pendCount}</span><span class="bib-stat-label">Pendientes</span></div>
       <div class="bib-stat"><span class="bib-stat-num">${leyendoCount}</span><span class="bib-stat-label">Leyendo</span></div>
@@ -1153,6 +1211,8 @@ function renderBibliotecaView(){
   `;
   autoGrowAll();
 }
+
+function setBibSeccion(s){ bibSeccion=s; bibZonaFilter=''; bibCategoriaFilter=''; bibNivelFilter=''; renderBibliotecaView(); }
 
 function setBibFilter(f){ bibFilter=f; renderBibliotecaView(); }
 function setBibZonaFilter(zid){ bibZonaFilter=zid; renderBibliotecaView(); }
@@ -1210,6 +1270,7 @@ function addArticulo(){
   const a={
     id: uid(), titulo:'', autorAnio:'', link:'', estado:'pendiente',
     zona:'', categoria:'', nivel:'', tags:'', rating:0, resumen:'', citaClave:'',
+    coleccion: bibSeccion==='tesis' ? 'tesis' : '',
     fecha:new Date().toISOString().slice(0,10), fechaLeido:''
   };
   BIB.articulos.unshift(a);
