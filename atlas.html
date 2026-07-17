@@ -46,6 +46,7 @@ const bibliotecaRef = firebase.database().ref('biblioteca');
   --pend:#B4791D; --pend-light:#FBF0DD;
   --leyendo:#2F6690; --leyendo-light:#E3EEF5;
   --leido:#3F7A52; --leido-light:#E7F3EA;
+  --teal:#0E7C66; --teal-light:#E1F2ED;
 }
 html,body{height:100%;font-family:'Inter',sans-serif;background:var(--surface);color:var(--text);-webkit-tap-highlight-color:transparent;}
 input,textarea,select{font-family:'Inter',sans-serif;}
@@ -173,6 +174,9 @@ textarea.autogrow{resize:none;overflow:hidden;}
 /* ── BIBLIOTECA (modo lectura) ── */
 .app.biblioteca-mode{background:var(--paper-bg);}
 .app.biblioteca-mode .topbar{background:var(--rust);}
+.app.teoria-mode .topbar{background:var(--teal);}
+.app.teoria-mode .sub-section-title{color:var(--teal);}
+.app.teoria-mode .bib-tabs button.on{background:var(--teal);border-color:var(--teal);}
 .btn-switch{background:rgba(255,255,255,.15);border:none;color:#fff;border-radius:8px;padding:7px 10px;font-size:12.5px;font-weight:600;flex-shrink:0;white-space:nowrap;font-family:Inter,sans-serif;}
 
 .bib-dash{display:flex;gap:8px;margin-bottom:14px;}
@@ -264,6 +268,7 @@ textarea.autogrow{resize:none;overflow:hidden;}
       <p id="topSub">Casartelli · lectura clínica</p>
     </div>
     <button class="btn-switch" id="btnSwitch" onclick="goToAtlas()" title="Ir al Atlas de lesiones">🩻 Atlas</button>
+    <button class="btn-switch" id="btnTeoria" onclick="goToTeoria()" title="Ir a Teoría">📖 Teoría</button>
     <button class="btn-lock" id="btnLock" style="display:none;" onclick="toggleEditMode()" title="Bloquear/desbloquear edición">🔒</button>
   </div>
   <div class="panel" id="panel"></div>
@@ -281,7 +286,9 @@ let viewMode = 'full'; // 'full' | 'compact'
 let editMode = localStorage.getItem('atlas_edit_mode')==='1'; // bloqueado por defecto
 
 // Biblioteca (pantalla principal de la app)
-let screen = 'biblioteca'; // 'biblioteca' | 'atlas'
+let screen = 'biblioteca'; // 'biblioteca' | 'atlas' | 'teoria'
+let teoriaZona = 'hombro'; // pestaña activa dentro de Teoría
+let openTemaIds = new Set();
 let BIB = { articulos: [] };
 let bibFilter = 'pendiente'; // 'pendiente' | 'leyendo' | 'leido' | 'todos'
 let bibSeccion = 'general'; // 'general' | 'tesis'
@@ -371,6 +378,176 @@ const NIVELES = [
 ];
 const NIVEL_LABELS = {};
 NIVELES.forEach(n=>NIVEL_LABELS[n.id]=n.label);
+
+// Zonas habilitadas para la sección Teoría (se puede ampliar a futuro).
+const TEORIA_ZONAS = [
+  {id:'hombro',  label:'Hombro'},
+  {id:'columna', label:'Columna'},
+  {id:'cadera',  label:'Cadera'}
+];
+
+// ══════════════════ CONTENIDO: TEORÍA (estudio, tipo apunte de facultad) ══════════════════
+// Contenido de repaso teórico-clínico, no ligado a lesiones puntuales del Atlas ni a papers
+// de la Biblioteca. Pensado para reforzar fundamentos (anatomía, biomecánica, fisiopatología,
+// razonamiento clínico y principios de rehabilitación) en las zonas que Lucas maneja menos.
+const TEORIA = {
+  hombro: [
+    {id:'ho-anat', titulo:'Anatomía funcional y biomecánica del hombro',
+      secciones:[
+        {titulo:'Anatomía funcional', texto:'El hombro es un complejo de cuatro articulaciones (glenohumeral, acromioclavicular, esternoclavicular y escapulotorácica) que trabajan de forma coordinada. La cabeza humeral es grande en relación a una glenoides pequeña y poco profunda: esa incongruencia da mucha movilidad a costa de estabilidad intrínseca. La estabilidad se reparte entre estabilizadores estáticos (labrum, cápsula, ligamentos glenohumerales) y dinámicos (manguito rotador —supraespinoso, infraespinoso, redondo menor, subescapular—, deltoides, y estabilizadores escapulares como trapecio, serrato anterior y romboides).'},
+        {titulo:'Biomecánica', texto:'El ritmo escapulohumeral describe la relación aproximada 2:1 entre movimiento glenohumeral y escapulotorácico durante la elevación del brazo. El manguito rotador funciona como depresor y centrador de la cabeza humeral, contrarrestando la fuerza de cizalla que genera el deltoides hacia arriba. El espacio subacromial (normalmente entre 7 y 14 mm) y la rotación externa durante la elevación son claves para evitar el contacto entre el troquíter y el arco coracoacromial.'}
+      ]},
+    {id:'ho-fisio', titulo:'Fisiopatología del dolor subacromial y del manguito rotador',
+      secciones:[
+        {titulo:'Modelos etiológicos', texto:'Clásicamente se distinguían causas extrínsecas (compresión mecánica por morfología acromial, engrosamiento bursal, discinesia escapular) e intrínsecas (degeneración tendinosa por hipovascularización de la "zona crítica" del supraespinoso, sobrecarga tensional acumulada, envejecimiento del colágeno). Hoy el término "subacromial pain syndrome" reemplaza a "impingement" porque el dolor no siempre se explica por compresión mecánica demostrable: pesa más la sensibilización del sistema nervioso y el control neuromuscular que la forma del acromion. El continuum va de tendinopatía reactiva a rotura parcial y eventualmente rotura completa.'},
+        {titulo:'Factores contribuyentes', texto:'Discinesia escapular (patrón de aleteo, elevación excesiva del hombro, hiperactividad de trapecio superior con hipoactividad de trapecio inferior y serrato anterior), rigidez capsular posterior (GIRD, déficit de rotación interna glenohumeral), déficit de fuerza/resistencia del manguito rotador, y factores de carga (deportes de lanzamiento u overhead, trabajo repetitivo por encima de la cabeza).'}
+      ]},
+    {id:'ho-inest', titulo:'Inestabilidad glenohumeral y lesiones labrales',
+      secciones:[
+        {titulo:'Clasificación y mecanismos', texto:'Se suele contrastar TUBS (Traumática, Unidireccional, lesión de Bankart, tratamiento quirúrgico) con AMBRI (Atraumática, Multidireccional, Bilateral, tratamiento rehabilitador, capsular shift inferior). La lesión de Bankart (desinserción del labrum anteroinferior) aparece típicamente tras una luxación anterior traumática. La lesión SLAP (superior labrum anterior-posterior) se asocia a mecanismos de tracción o desaceleración, frecuente en lanzadores. El Hill-Sachs es una impactación posterosuperior de la cabeza humeral por el borde glenoideo.'},
+        {titulo:'Relevancia clínica', texto:'La edad en el primer episodio de luxación es el predictor más fuerte de recidiva: en menores de 20 años el riesgo de un nuevo episodio es muy alto. El test de aprehensión y el de reposicionamiento (Jobe) evalúan inestabilidad anterior; el sulcus test evalúa el componente inferior/multidireccional.'}
+      ]},
+    {id:'ho-rehab', titulo:'Principios de rehabilitación del hombro',
+      secciones:[
+        {titulo:'Fases de progresión', texto:'Fase 1: control del dolor, movilidad pasiva-asistida en rango libre de síntomas, isométricos submáximos de manguito rotador y estabilizadores escapulares. Fase 2: fuerza progresiva del manguito en cadena abierta y cerrada, control escapular activo, reeducación del ritmo escapulohumeral. Fase 3: fuerza funcional, trabajo pliométrico si el deporte lo exige (overhead), tolerancia progresiva a carga en rangos elevados de elevación/rotación. Fase 4: retorno deportivo, gestos específicos del deporte, criterios de simetría de fuerza (LSI ≥90% respecto al lado sano).'},
+        {titulo:'Criterios de progresión', texto:'La progresión debe guiarse por tolerancia sintomática y no por tiempo fijo en el calendario: monitorear EVA post-ejercicio (no debería superar un nivel leve-moderado ni persistir más de 24 horas). En deportistas overhead, prestar especial atención a la relación rotación externa/interna y al GIRD, factores asociados a mayor riesgo de lesión del manguito y del labrum.'}
+      ]},
+    {id:'ho-eval', titulo:'Evaluación clínica y tests especiales del hombro',
+      secciones:[
+        {titulo:'Tests de manguito rotador', texto:'Jobe / empty can (supraespinoso), test de rotación externa resistida en aducción (infraespinoso/redondo menor), lift-off y belly press (subescapular). Ningún test aislado tiene sensibilidad y especificidad suficientes por sí solo: se interpretan en batería, junto con la historia clínica y el patrón de debilidad/dolor.'},
+        {titulo:'Tests de pinzamiento e inestabilidad', texto:'Neer y Hawkins-Kennedy para signos de pinzamiento subacromial (baja especificidad, útiles más para descartar que para confirmar). Aprehensión y reposicionamiento para inestabilidad anterior, sulcus test para componente inferior. O\u2019Brien (active compression test) orienta a patología labral tipo SLAP o AC, aunque también tiene falsos positivos altos.'}
+      ]},
+    {id:'ho-ac', titulo:'Patología acromioclavicular y esternoclavicular',
+      secciones:[
+        {titulo:'Lesiones acromioclaviculares', texto:'Los esguinces de la articulación AC se clasifican con la escala de Rockwood (I a VI) según el grado de disrupción de los ligamentos AC y coracoclaviculares y el desplazamiento de la clavícula. Los grados I-II suelen manejarse de forma conservadora; los grados IV-VI habitualmente requieren cirugía; el grado III es zona gris y depende de la demanda funcional del paciente. La artrosis AC es una causa frecuente de dolor localizado en la cara superior del hombro, reproducible con aducción horizontal forzada (cross-body test).'},
+        {titulo:'Articulación esternoclavicular', texto:'Con menos protagonismo clínico que la AC, pero relevante en luxaciones (raras, mecanismo de alta energía) y en cuadros degenerativos. El dolor esternoclavicular aislado sin trauma también puede orientar a causas sistémicas (artritis inflamatoria) si se acompaña de otros signos.'}
+      ]},
+    {id:'ho-congelado', titulo:'Hombro congelado (capsulitis adhesiva)',
+      secciones:[
+        {titulo:'Fisiopatología y fases', texto:'Engrosamiento y fibrosis de la cápsula glenohumeral (especialmente el intervalo rotador y el ligamento coracohumeral), con pérdida progresiva y global del rango de movimiento tanto activo como pasivo, en particular la rotación externa. Se describen tres fases: congelamiento (dolor progresivo, pérdida de rango, puede durar 2-9 meses), congelado o meseta (dolor menor pero rigidez marcada, 4-12 meses) y descongelamiento (recuperación gradual del rango, puede tardar 12-24 meses en total desde el inicio). Más frecuente en diabéticos y entre los 40-60 años.'},
+        {titulo:'Manejo clínico', texto:'En fase de congelamiento con dolor predominante, priorizar control del dolor y movilidad suave dentro de tolerancia (evitar forzar rango agresivamente, puede exacerbar la irritabilidad). En fase de meseta/descongelamiento, progresar movilización más activa y fuerza. El curso es habitualmente autolimitado pero prolongado; es importante explicarle esto al paciente para manejar expectativas de tiempo.'}
+      ]},
+    {id:'ho-postquir', titulo:'Hombro post-quirúrgico: consideraciones generales',
+      secciones:[
+        {titulo:'Reparación de manguito rotador', texto:'La prioridad inicial es proteger la reparación tendinosa: inmovilización o rango protegido según indicación del cirujano (habitualmente 4-6 semanas antes de iniciar movilidad activa), respetando los tiempos biológicos de cicatrización tendón-hueso más que la sintomatología del paciente (que suele mejorar mucho antes de que el tendón esté consolidado). La fuerza activa contra resistencia se retrasa típicamente hasta la semana 10-12.'},
+        {titulo:'Estabilización e implantes', texto:'Tras cirugía de estabilización (Bankart artroscópico o procedimientos óseos tipo Latarjet), se protege la rotación externa y la abducción combinada en las primeras semanas para no tensionar la reparación anterior. En artroplastias (prótesis total o invertida), el protocolo depende mucho del abordaje quirúrgico y del estado del manguito rotador remanente: siempre conviene coordinar tiempos exactos con el cirujano tratante antes de progresar fases.'}
+      ]},
+    {id:'ho-guia', titulo:'Guía clínica de manejo del dolor de hombro',
+      secciones:[
+        {titulo:'Manejo escalonado', texto:'Las guías de práctica clínica coinciden en un enfoque escalonado para la mayoría del dolor de hombro no traumático: primera línea es educación + ejercicio terapéutico activo (fuerza de manguito rotador y estabilizadores escapulares) mantenido al menos 6-12 semanas antes de considerar otras intervenciones, ya que buena parte de los cuadros mejora con manejo conservador solo. La infiltración con corticoides puede considerarse como puente para reducir dolor y facilitar el ejercicio en cuadros muy irritables, no como tratamiento aislado. La cirugía se reserva para roturas traumáticas agudas en personas jóvenes/activas, o para fallo documentado de un programa conservador bien hecho (típicamente 3-6 meses) en roturas degenerativas.'},
+        {titulo:'Criterios de imagen', texto:'La ecografía o resonancia no está indicada de rutina en el primer contacto de un dolor de hombro no traumático: se recomienda reservarla para sospecha de rotura traumática aguda con déficit funcional relevante, sospecha de patología que cambiaría la conducta (inestabilidad recurrente, sospecha de origen inflamatorio o tumoral), o falta de respuesta a un manejo conservador adecuado. Pedir imagen "para confirmar" sin cambio esperado en la conducta clínica no suele aportar valor y puede generar hallazgos incidentales (roturas asintomáticas del manguito son comunes después de los 50-60 años) que confunden más de lo que ayudan.'}
+      ]}
+  ],
+  columna: [
+    {id:'co-anat', titulo:'Anatomía funcional y biomecánica de la columna',
+      secciones:[
+        {titulo:'Anatomía funcional', texto:'La unidad funcional básica es el segmento formado por dos vértebras y el disco intervertebral entre ellas. El disco (núcleo pulposo rodeado por el anillo fibroso) amortigua y transmite carga axial. Las articulaciones facetarias comparten hasta un 25-30% de la carga axial cuando hay lordosis, y guían el movimiento segmentario. Las curvas fisiológicas (lordosis cervical y lumbar, cifosis dorsal) distribuyen mejor la carga que una columna recta. La musculatura profunda (multífidos, transverso del abdomen) aporta control segmentario fino, mientras la musculatura global (erectores, oblicuos) genera el torque para el movimiento grueso.'},
+        {titulo:'Biomecánica regional', texto:'La columna cervical prioriza la movilidad: la articulación C1-C2 aporta cerca de la mitad de toda la rotación cervical. La columna lumbar prioriza el soporte de carga y la flexo-extensión. La columna torácica es relativamente rígida por su relación con la caja costal, lo que la protege pero también puede trasladar demandas de movilidad a segmentos vecinos (cervical bajo, lumbar) cuando está restringida.'}
+      ]},
+    {id:'co-fisio', titulo:'Fisiopatología del dolor de columna',
+      secciones:[
+        {titulo:'Modelo biopsicosocial', texto:'En más del 90% de los cuadros de lumbalgia no se identifica una causa estructural única y se la clasifica como "inespecífica". El dolor se explica mejor por la interacción entre factores tisulares (disco, faceta, sacroilíaca, musculatura), sensibilización del sistema nervioso central, factores psicosociales (miedo al movimiento, catastrofismo) y factores de carga o desacondicionamiento físico. Esto no significa que el dolor "no sea real": significa que el enfoque puramente estructural es insuficiente para explicarlo y tratarlo.'},
+        {titulo:'Radiculopatía y estenosis', texto:'La radiculopatía surge por compresión o irritación química de una raíz nerviosa (hernia discal, estenosis foraminal); el dolor irradiado sigue un trayecto dermatómico y puede acompañarse de déficit motor, sensitivo o de reflejos. La estenosis de canal central produce claudicación neurógena: dolor/pesadez en miembros inferiores que empeora con la extensión y la marcha prolongada, y mejora con la flexión (por eso muchos pacientes caminan mejor inclinados hacia adelante o en bicicleta).'}
+      ]},
+    {id:'co-banderas', titulo:'Banderas rojas, amarillas y razonamiento clínico',
+      secciones:[
+        {titulo:'Banderas rojas', texto:'Signos de alarma que ameritan derivación: síndrome de cauda equina (anestesia en silla de montar, retención urinaria, déficit motor bilateral progresivo) es una urgencia; sospecha de fractura (trauma significativo, uso crónico de corticoides, edad avanzada con osteoporosis conocida); sospecha de infección o neoplasia (dolor nocturno no mecánico que no cede con el reposo, fiebre, pérdida de peso inexplicada, antecedente oncológico).'},
+        {titulo:'Banderas amarillas', texto:'Factores psicosociales como catastrofismo, kinesiofobia y expectativas bajas de recuperación son predictores de cronificación tan o más fuertes que muchos hallazgos estructurales en imágenes. Identificarlos tempranamente permite adaptar el abordaje (educación, exposición gradual) antes de que el dolor se cronifique.'}
+      ]},
+    {id:'co-rehab', titulo:'Principios de rehabilitación de columna',
+      secciones:[
+        {titulo:'Enfoque activo', texto:'Desde etapas tempranas conviene priorizar educación (desmedicalizar el cuadro, explicar que dolor no equivale necesariamente a daño estructural), mantener actividad dentro de lo tolerable en vez de reposo prolongado, y progresar el ejercicio terapéutico: primero control motor segmentario, luego fuerza global, luego capacidad funcional y tolerancia a carga.'},
+        {titulo:'Elección del ejercicio', texto:'La evidencia no muestra superioridad clara de un método específico sobre otro (McKenzie, control motor, Pilates, fuerza general): lo que más predice el resultado es la adherencia y la exposición gradual a los movimientos que el paciente teme o evita. En radiculopatía con déficit motor progresivo o estenosis con claudicación severa que no responde a manejo conservador, corresponde evaluar derivación para valoración quirúrgica.'}
+      ]},
+    {id:'co-eval', titulo:'Evaluación clínica y clasificación mecánica',
+      secciones:[
+        {titulo:'Examen neurológico', texto:'Ante sospecha de compromiso radicular se evalúan los tres pilares: fuerza por miotoma (ej. L4 cuádriceps, L5 extensor largo del hallux, S1 flexores plantares), sensibilidad por dermatoma, y reflejos (rotuliano L3-L4, aquíleo S1). El SLR (straight leg raise) y el Slump test evalúan tensión neural en el miembro inferior; Spurling y la distracción cervical cumplen un rol análogo en cervical (Spurling reproduce síntomas radiculares al comprimir en extensión-rotación-lateralización, la distracción los alivia).'},
+        {titulo:'Clasificación por preferencia direccional', texto:'El enfoque tipo McKenzie clasifica según cómo responden los síntomas a movimientos repetidos en distintas direcciones: si la centralización del dolor (que el dolor se retraiga desde la periferia hacia la línea media) ocurre con un movimiento específico (típicamente extensión en lumbalgia discogénica), eso orienta tanto el diagnóstico como el ejercicio a indicar. Es una herramienta clínica práctica, no un diagnóstico estructural definitivo.'}
+      ]},
+    {id:'co-cervical', titulo:'Patología cervical específica',
+      secciones:[
+        {titulo:'Latigazo cervical (whiplash)', texto:'Mecanismo de aceleración-desaceleración brusca (típico en choques de tránsito) que genera una lesión de tejidos blandos cervicales sin daño estructural mayor en la mayoría de los casos. La clasificación WAD (Whiplash Associated Disorders, grados I-IV) orienta el pronóstico. Un subgrupo desarrolla dolor crónico; los predictores de mala evolución incluyen alta intensidad de dolor inicial, catastrofismo y estrés postraumático, más que la velocidad del impacto.'},
+        {titulo:'Mareo cervicogénico', texto:'Sensación de inestabilidad o desequilibrio (no vértigo rotatorio franco) asociada a disfunción de los propioceptores cervicales altos, frecuentemente junto con cervicalgia. Es un diagnóstico de exclusión: conviene descartar antes causas vestibulares periféricas (VPPB), centrales o vasculares antes de atribuirlo a origen cervical.'}
+      ]},
+    {id:'co-quirurgico', titulo:'Columna post-quirúrgica',
+      secciones:[
+        {titulo:'Discectomía', texto:'Resección del fragmento herniado que comprime la raíz nerviosa. La recuperación suele ser relativamente rápida en cuanto a alivio del dolor radicular, pero el manejo temprano prioriza evitar flexión-rotación combinada y cargas axiales altas mientras cicatriza el anillo fibroso, con progresión gradual hacia control motor y fuerza en las semanas siguientes.'},
+        {titulo:'Artrodesis (fusión)', texto:'Fijación instrumentada de uno o más segmentos para eliminar el movimiento doloroso o inestable, a costa de transferir mayor demanda de movimiento a los segmentos adyacentes (posible factor de riesgo de degeneración adyacente a largo plazo). El protocolo post-quirúrgico depende del abordaje y del número de niveles fusionados; es clave coordinar tiempos de carga y movilidad con el cirujano antes de progresar fuerza global.'}
+      ]},
+    {id:'co-hernia', titulo:'Hernia de disco y enfermedad degenerativa discal',
+      secciones:[
+        {titulo:'Tipos y progresión', texto:'El disco degenera en un continuum: abombamiento (bulging, difuso y simétrico) → protrusión (el núcleo desplaza el anillo pero sin atravesarlo por completo, base más ancha que el resto) → extrusión (el material discal atraviesa el anillo, base más angosta que la porción extruida) → secuestro (fragmento libre desconectado del disco de origen, migra en el canal). Los niveles más frecuentemente afectados son L4-L5 y L5-S1 por ser los de mayor carga y movilidad de la columna lumbar.'},
+        {titulo:'Historia natural', texto:'Un dato clínicamente muy relevante para transmitir al paciente: la mayoría de las hernias discales, incluidas extrusiones grandes, se reabsorben espontáneamente con el tiempo (semanas a meses) por un proceso inflamatorio de reabsorción; cuanto más grande y más extruida, mayor tendencia a reabsorberse. Esto sustenta el manejo conservador como primera línea en ausencia de banderas rojas o déficit neurológico progresivo, incluso con hallazgos de imagen "grandes".'}
+      ]},
+    {id:'co-espondilolistesis', titulo:'Espondilolisis y espondilolistesis',
+      secciones:[
+        {titulo:'Espondilolisis', texto:'Fractura por estrés de la pars interarticularis (istmo vertebral), típicamente en L5, muy asociada a deportes con hiperextensión-rotación lumbar repetida (gimnasia, fútbol, remo, levantamiento de pesas). Es una causa frecuente de lumbalgia mecánica en adolescentes y adultos jóvenes deportistas que no debe pasarse por alto: el dolor unilateral que empeora específicamente con extensión lumbar (test de la cigüeña/stork test) orienta la sospecha.'},
+        {titulo:'Espondilolistesis', texto:'Deslizamiento anterior de una vértebra sobre la inferior, puede ser consecuencia de una espondilolisis bilateral no consolidada (tipo ístmico, más común en jóvenes) o de degeneración articular facetaria (tipo degenerativo, más común en adultos mayores, típicamente L4-L5). Se clasifica por grados según el porcentaje de deslizamiento (Meyerding I a V). El manejo conservador con fortalecimiento de estabilizadores segmentarios es efectivo en la mayoría de los grados bajos (I-II); grados altos o con progresión/déficit neurológico requieren evaluación quirúrgica.'}
+      ]},
+    {id:'co-facetario-si', titulo:'Síndrome facetario y disfunción sacroilíaca',
+      secciones:[
+        {titulo:'Dolor de origen facetario', texto:'Las articulaciones facetarias (cigapofisarias) pueden generar dolor lumbar localizado, a veces referido a glúteo o cara posterior de muslo (sin seguir un dermatoma claro), que típicamente empeora con extensión y rotación lumbar y mejora con flexión. Es más frecuente en adultos mayores por cambios degenerativos articulares. No existe un test clínico aislado suficientemente preciso para confirmarlo; el diagnóstico es principalmente por exclusión y por patrón de respuesta al movimiento.'},
+        {titulo:'Disfunción sacroilíaca', texto:'Dolor localizado sobre la articulación sacroilíaca (frecuentemente unilateral, cerca de la espina ilíaca posterosuperior), sin irradiación radicular clara. Se sospecha con una batería de tests de provocación (thigh thrust, compresión, distracción, Gaenslen, FABER): la combinación de 3 o más positivos aumenta bastante la probabilidad diagnóstica, mientras que un solo test aislado tiene poco valor. Frecuente en el posparto por los cambios de laxitud ligamentaria del embarazo.'}
+      ]},
+    {id:'co-inflamatorio', titulo:'Dolor lumbar inflamatorio y espondiloartritis',
+      secciones:[
+        {titulo:'Por qué importa diferenciarlo', texto:'Distinguir dolor lumbar mecánico de dolor lumbar inflamatorio cambia por completo el manejo, porque este último orienta a una espondiloartropatía (ej. espondilitis anquilosante) que requiere derivación a reumatología y no solo kinesiología. Son datos de alarma para sospecha inflamatoria: inicio antes de los 40 años, comienzo insidioso (no traumático), duración mayor a 3 meses, rigidez matinal prolongada (más de 30-60 minutos), mejora notable con el ejercicio y empeora con el reposo, y buena respuesta a antiinflamatorios.'},
+        {titulo:'Manejo', texto:'Ante sospecha razonable de dolor lumbar inflamatorio (varios criterios presentes), corresponde derivar para estudio (laboratorio, imágenes, evaluación reumatológica) en paralelo al tratamiento kinésico, que sigue teniendo un rol importante en estas condiciones (mantener movilidad, capacidad respiratoria si hay compromiso torácico, y función general) una vez confirmado el diagnóstico y con manejo médico en marcha.'}
+      ]},
+    {id:'co-osteoporosis', titulo:'Fracturas vertebrales por fragilidad y osteoporosis',
+      secciones:[
+        {titulo:'Presentación', texto:'Las fracturas vertebrales por compresión asociadas a osteoporosis pueden ocurrir con traumas mínimos (incluso un estornudo o levantar un objeto liviano) en personas mayores, sobre todo mujeres posmenopáusicas. Muchas son asintomáticas o se detectan de forma incidental en imágenes, pero cuando duelen suele ser un dolor agudo, localizado, que empeora marcadamente con la carga axial y mejora en decúbito. La acumulación de fracturas genera cifosis dorsal progresiva ("joroba de viuda") y pérdida de altura.'},
+        {titulo:'Consideraciones para el tratamiento', texto:'En fase aguda, priorizar control del dolor y evitar flexión de tronco cargada; el manejo conservador suele ser efectivo en la mayoría de los casos en 6-12 semanas. A mediano plazo, el foco kinésico se traslada a fortalecimiento de extensores de tronco (relacionado con menor riesgo de nuevas fracturas), trabajo de equilibrio para prevención de caídas, y educación postural, siempre en conjunto con el manejo médico de la osteoporosis de base (densitometría, tratamiento farmacológico si corresponde).'}
+      ]},
+    {id:'co-guia', titulo:'Guía clínica de manejo del dolor lumbar y cervical',
+      secciones:[
+        {titulo:'Manejo escalonado', texto:'Las guías internacionales de dolor lumbar (NICE, guías de colegios americanos de médicos) convergen en recomendaciones similares: primera línea es educación (mantenerse activo, evitar reposo prolongado, expectativas realistas), ejercicio terapéutico y terapia manual como coadyuvante si aporta a la adherencia al ejercicio; desaconsejan de forma explícita el uso rutinario de opioides y el reposo en cama. La derivación a manejo intervencionista (infiltraciones) o quirúrgico se reserva para radiculopatía con déficit progresivo, estenosis con claudicación severa e incapacitante, o fallo de un tratamiento conservador bien estructurado (habitualmente 6-12 semanas).'},
+        {titulo:'Criterios de imagen', texto:'La recomendación consistente entre guías es NO pedir imagen de rutina en dolor lumbar agudo sin banderas rojas, porque los hallazgos degenerativos (protrusiones, deshidratación discal, artrosis facetaria) son extremadamente frecuentes en columnas asintomáticas y no predicen bien el pronóstico ni cambian la conducta inicial. Se reserva la imagen (habitualmente resonancia) para: banderas rojas presentes, déficit neurológico progresivo u objetivable, sospecha de causa inflamatoria/infecciosa/tumoral, o falta de mejoría tras 6-12 semanas de tratamiento conservador adecuado. El mismo criterio aplica en cervicalgia mecánica sin trauma significativo.'}
+      ]}
+  ],
+  cadera: [
+    {id:'ca-anat', titulo:'Anatomía funcional y biomecánica de cadera y pelvis',
+      secciones:[
+        {titulo:'Anatomía funcional', texto:'La cadera es una articulación esferoidea profunda, más congruente que el hombro. El labrum acetabular aumenta la superficie de contacto y genera un efecto de sellado ("suction seal") que ayuda a la lubricación y a distribuir la carga sobre el cartílago. La cápsula está reforzada por los ligamentos iliofemoral (el más fuerte del cuerpo), pubofemoral e isquiofemoral, que limitan la extensión y rotación excesivas.'},
+        {titulo:'Biomecánica', texto:'Durante la marcha la cadera soporta entre 3 y 5 veces el peso corporal. El glúteo medio controla la báscula pélvica en el apoyo monopodal; su insuficiencia se manifiesta como signo de Trendelenburg. La musculatura de la cadera funciona como puente entre el tronco y el miembro inferior, por lo que su déficit de control repercute tanto en la rodilla (valgo dinámico) como en la zona lumbar.'}
+      ]},
+    {id:'ca-fai', titulo:'Fisiopatología del choque femoroacetabular (FAI) y patología labral',
+      secciones:[
+        {titulo:'Morfología y mecanismo', texto:'Se describen tres tipos morfológicos: Cam (exceso óseo en la unión cabeza-cuello femoral, más frecuente en varones jóvenes deportistas), Pincer (sobrecobertura acetabular) y mixto. El contacto anormal repetido en flexión combinada con rotación interna genera daño progresivo del labrum y del cartílago adyacente. Un punto importante: no toda morfología Cam o Pincer es sintomática, la correlación entre hallazgo morfológico y dolor no es directa ni obligatoria.'},
+        {titulo:'Presentación clínica', texto:'Dolor inguinal profundo (a veces referido como "signo de la C" al tomarse la cadera con la mano en forma de C), sensación de click o bloqueo intermitente, y test de impingement anterior (flexión-aducción-rotación interna) positivo como hallazgo característico en el examen físico.'}
+      ]},
+    {id:'ca-tendon', titulo:'Tendinopatías y patología de partes blandas de cadera',
+      secciones:[
+        {titulo:'Tendinopatía glútea (GTPS)', texto:'Lo que antes se llamaba "bursitis trocantérea" hoy se agrupa como Greater Trochanteric Pain Syndrome, y en la mayoría de los casos el origen principal es tendinopático (glúteo medio y menor) más que inflamatorio de la bursa. Se produce por sobrecarga en compresión sostenida (cruzar las piernas, dormir de costado sin apoyo, posturas con aducción de cadera) combinada con déficit de control de la báscula pélvica. Es más frecuente en mujeres de mediana edad.'},
+        {titulo:'Lesiones musculares proximales', texto:'Los isquiotibiales proximales se lesionan típicamente por un mecanismo de estiramiento-desaceleración a alta velocidad (sprint). Los aductores se lesionan más por cambios de dirección bruscos; cuando la sobrecarga es crónica sobre la sínfisis púbica y su interfase con el recto abdominal y el aductor largo, se habla de pubalgia atlética o entesopatía púbica.'}
+      ]},
+    {id:'ca-rehab', titulo:'Principios de rehabilitación de cadera',
+      secciones:[
+        {titulo:'Fase inicial', texto:'Control del dolor evitando posiciones de compresión sostenida (aducción y flexión combinadas en tendinopatías glúteas, flexión-rotación interna en FAI sintomático), trabajo isométrico en rango medio, y movilidad dentro de la tolerancia del paciente.'},
+        {titulo:'Progresión y retorno deportivo', texto:'Fuerza de cadena cinética completa priorizando glúteo medio, glúteo mayor y rotadores, reeducación del control pélvico en apoyo unipodal, y en atletas trabajo específico de aceleración, desaceleración y cambios de dirección antes de habilitar el retorno deportivo pleno. En FAI, la vía quirúrgica (artroscopia) se reserva para casos que no responden a un tratamiento conservador bien llevado de al menos 3 a 6 meses.'}
+      ]},
+    {id:'ca-eval', titulo:'Evaluación clínica y tests especiales de cadera',
+      secciones:[
+        {titulo:'Tests de choque y patología labral', texto:'FADIR (flexión-aducción-rotación interna) es el test de referencia para pinzamiento anterior/patología labral, muy sensible pero poco específico (muchos falsos positivos, incluso en cadera asintomática). FABER (flexión-abducción-rotación externa, o test de Patrick) explora dolor de origen articular, sacroilíaco o de partes blandas anteriores según dónde se reproduzca el síntoma.'},
+        {titulo:'Tests de partes blandas y control motor', texto:'Trendelenburg (de pie, en apoyo monopodal) evalúa insuficiencia de glúteo medio para controlar la báscula pélvica. Test de Ober evalúa tensión de la banda iliotibial/tensor de la fascia lata. Thomas test evalúa flexibilidad de flexores de cadera (psoas, recto femoral). Ninguno reemplaza la evaluación funcional dinámica (ej. single leg squat) para ver el control real durante el movimiento.'}
+      ]},
+    {id:'ca-artrosis', titulo:'Artrosis de cadera y artroplastia total',
+      secciones:[
+        {titulo:'Coxartrosis', texto:'Degeneración progresiva del cartílago articular con esclerosis subcondral, osteofitos y pérdida de espacio articular. Se presenta con dolor inguinal profundo de ritmo mecánico (empeora con actividad, mejora con reposo), rigidez matinal breve, y pérdida progresiva de rango sobre todo en rotación interna y extensión. El ejercicio terapéutico (fuerza, control motor, actividad aeróbica de bajo impacto) es tratamiento de primera línea y retrasa la necesidad de cirugía en muchos casos.'},
+        {titulo:'Prótesis total de cadera', texto:'Cuando el dolor y la limitación funcional no responden al manejo conservador. El protocolo post-quirúrgico depende del abordaje (posterior, anterior o lateral): el abordaje posterior clásicamente restringe flexión combinada con aducción y rotación interna (riesgo de luxación posterior) durante las primeras 6-12 semanas, mientras que el abordaje anterior tiende a ser menos restrictivo en ese sentido pero cuida la extensión combinada con rotación externa. Siempre conviene confirmar las precauciones exactas con el cirujano de cada paciente.'}
+      ]},
+    {id:'ca-diferencial', titulo:'Diagnóstico diferencial de dolor inguinal en el deportista',
+      secciones:[
+        {titulo:'Causas musculoesqueléticas superpuestas', texto:'El dolor inguinal en deportistas rara vez tiene una única causa: es frecuente la coexistencia de pubalgia atlética (sobrecarga de la sínfisis púbica y su interfase con recto abdominal/aductor largo), FAI, y tendinopatía de aductores o iliopsoas. El consenso de Doha (terminología de dolor inguinal relacionado al deporte) clasifica en categorías de dolor relacionado con aductores, iliopsoas, pubis, inguinal (pared posterior) y relacionado a cadera, que pueden solaparse en un mismo paciente.'},
+        {titulo:'Causas no musculoesqueléticas a descartar', texto:'Hernia inguinal o crural, patología urológica o ginecológica referida, y neuropatías periféricas como la meralgia parestésica (atrapamiento del nervio femorocutáneo lateral, produce dolor/parestesias en cara anterolateral del muslo sin déficit motor) o el atrapamiento del nervio obturador (dolor medial de muslo que empeora con el ejercicio). Ante dolor inguinal atípico que no responde al manejo kinésico esperado, vale la pena ampliar la sospecha diagnóstica.'}
+      ]},
+    {id:'ca-guia', titulo:'Guía clínica de manejo del dolor de cadera',
+      secciones:[
+        {titulo:'Manejo escalonado', texto:'Para coxartrosis, las guías (ej. OARSI) recomiendan como primera línea, universal para prácticamente todos los pacientes: educación, ejercicio terapéutico (fuerza + aeróbico de bajo impacto) y manejo del peso corporal si corresponde; estas medidas se recomiendan incluso antes de estudios de imagen en muchos casos, porque el diagnóstico de coxartrosis leve-moderada suele ser clínico. Para FAI y patología labral, el tratamiento conservador estructurado (fuerza, control motor, modificación de actividad) es primera línea recomendada durante al menos 3 meses antes de considerar derivación a cirugía, salvo bloqueo mecánico verdadero o falla documentada del conservador.'},
+        {titulo:'Criterios de imagen y derivación', texto:'En coxartrosis típica (dolor inguinal mecánico, edad media/mayor, rigidez matinal breve), la radiografía simple alcanza para confirmar y no siempre es imprescindible para iniciar tratamiento conservador. La resonancia se reserva para sospecha de patología labral/condral en pacientes jóvenes con clínica sugestiva de FAI que no mejoran con manejo inicial, o para descartar causas menos frecuentes (fractura de estrés del cuello femoral en corredores con dolor inguinal de inicio insidioso, que es una bandera roja a no pasar por alto en este grupo). La derivación a artroplastia se reserva para dolor/discapacidad significativos que no responden a manejo conservador completo, con impacto relevante en calidad de vida.'}
+      ]}
+  ]
+};
 
 function initApp(){
   document.getElementById('panel').innerHTML=`<div class="empty-zona">Cargando…</div>`;
@@ -662,7 +839,9 @@ function render(){
   applyEditModeUI();
   const app=document.getElementById('app');
   if(app) app.classList.toggle('biblioteca-mode', screen==='biblioteca');
+  if(app) app.classList.toggle('teoria-mode', screen==='teoria');
   if(screen==='biblioteca'){ renderBibliotecaView(); }
+  else if(screen==='teoria'){ renderTeoriaView(); }
   else if(currentZona){ renderZonaView(); }
   else { renderBodyView(); }
 }
@@ -687,10 +866,13 @@ function goHome(){ currentZona=null; render(); }
 // Navegación entre Biblioteca (pantalla principal) y Atlas de lesiones (secundaria)
 function goToAtlas(){ screen='atlas'; currentZona=null; render(); }
 function goToBiblioteca(){ screen='biblioteca'; render(); }
+function goToTeoria(){ screen='teoria'; currentZona=null; render(); }
 function goBack(){
   if(screen==='atlas'){
     if(currentZona) goHome();
     else goToBiblioteca();
+  } else if(screen==='teoria'){
+    goToBiblioteca();
   }
 }
 
@@ -699,6 +881,7 @@ function renderBodyView(){
   document.getElementById('btnBack').style.display='inline-block';
   document.getElementById('btnBack').textContent='← Biblioteca';
   document.getElementById('btnSwitch').style.display='none';
+  document.getElementById('btnTeoria').style.display='inline-block';
   document.getElementById('btnLock').style.display='inline-block';
   document.getElementById('topTitle').textContent='Atlas Clínico';
   document.getElementById('topSub').textContent='Casartelli · MP 10722';
@@ -779,6 +962,7 @@ function renderZonaView(){
   document.getElementById('btnBack').style.display='inline-block';
   document.getElementById('btnBack').textContent='← Cuerpo';
   document.getElementById('btnSwitch').style.display='none';
+  document.getElementById('btnTeoria').style.display='none';
   document.getElementById('btnLock').style.display='inline-block';
   document.getElementById('topTitle').textContent=ZONA_LABELS[currentZona]||'Zona';
   document.getElementById('topSub').textContent='Lesiones, evaluación, evolución, manejo, casos y papers';
@@ -1123,6 +1307,7 @@ function renderBibliotecaView(){
   document.getElementById('btnBack').style.display='none';
   document.getElementById('btnSwitch').style.display='inline-block';
   document.getElementById('btnSwitch').textContent='🩻 Atlas';
+  document.getElementById('btnTeoria').style.display='inline-block';
   document.getElementById('btnLock').style.display='none';
 
   // Sección activa: Biblioteca general (todo lo que NO es de tesis) o Mi Tesis
@@ -1306,6 +1491,57 @@ function setArticuloRating(id,rating){
   a.rating = (a.rating===rating) ? 0 : rating; // tocar la misma estrella la desmarca
   bibSaveDB();
   renderBibliotecaView();
+}
+
+// ══════════════════ VISTA: TEORÍA ══════════════════
+function renderTeoriaView(){
+  document.getElementById('btnBack').style.display='inline-block';
+  document.getElementById('btnBack').textContent='← Biblioteca';
+  document.getElementById('btnSwitch').style.display='none';
+  document.getElementById('btnTeoria').style.display='none';
+  document.getElementById('btnLock').style.display='none';
+  document.getElementById('topTitle').textContent='Teoría';
+  document.getElementById('topSub').textContent='Repaso de fundamentos · tipo apunte';
+
+  const temas = TEORIA[teoriaZona] || [];
+  const tabsHtml = TEORIA_ZONAS.map(z=>`
+    <button class="${teoriaZona===z.id?'on':''}" onclick="setTeoriaZona('${z.id}')">${esc(z.label)}</button>
+  `).join('');
+
+  const listHtml = temas.length ? temas.map(t=>buildTemaCard(t)).join('') :
+    `<div class="empty-zona">Todavía no hay contenido para esta zona.</div>`;
+
+  document.getElementById('panel').innerHTML=`
+    <div class="bib-tabs">${tabsHtml}</div>
+    <div class="lesion-list">${listHtml}</div>
+  `;
+  autoGrowAll();
+}
+
+function setTeoriaZona(zid){ teoriaZona=zid; openTemaIds=new Set(); renderTeoriaView(); }
+
+function buildTemaCard(t){
+  const open=openTemaIds.has(t.id);
+  const seccionesHtml=(t.secciones||[]).map(s=>`
+    <div class="ref-block">
+      <div class="sub-section-title">${esc(s.titulo)}</div>
+      <p class="ref-text">${esc(s.texto)}</p>
+    </div>
+  `).join('');
+  return `
+  <div class="lesion-card ${open?'open':''}" id="tema_${t.id}">
+    <div class="lesion-head" onclick="toggleTema('${t.id}')">
+      <div class="lesion-title-block"><h3>${esc(t.titulo)}</h3></div>
+      <span class="lesion-chevron">▾</span>
+    </div>
+    <div class="lesion-body">${seccionesHtml}</div>
+  </div>`;
+}
+
+function toggleTema(id){
+  if(openTemaIds.has(id)) openTemaIds.delete(id); else openTemaIds.add(id);
+  const el=document.getElementById('tema_'+id);
+  if(el) el.classList.toggle('open', openTemaIds.has(id));
 }
 </script>
 </body>
