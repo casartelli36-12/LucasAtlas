@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Agremiados">
+<meta name="theme-color" content="#0F2A43">
+<title>Futbolistas Agremiados · Kinesiología</title>
+<style>
+:root{--ink:#0F2A43;--acc:#1F8A5B;--accd:#166947;--bg:#F3F5F8;--card:#fff;--mut:#6B7785;--line:#E2E7ED;--warn:#B45309;--red:#B91C1C;--blue:#1D4ED8}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:#1b2530;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;font-size:15px}
+body{padding-bottom:calc(76px + env(safe-area-inset-bottom))}
+h1,h2,h3{margin:0}
+button{font-family:inherit;font-size:15px;cursor:pointer}
+input,select,textarea{font-family:inherit;font-size:16px;width:100%;padding:11px 12px;border:1px solid var(--line);border-radius:10px;background:#fff;color:#1b2530;-webkit-appearance:none;appearance:none}
+textarea{min-height:84px;resize:vertical}
+select{background-image:linear-gradient(45deg,transparent 50%,#6B7785 50%),linear-gradient(135deg,#6B7785 50%,transparent 50%);background-position:calc(100% - 18px) 50%,calc(100% - 12px) 50%;background-size:6px 6px;background-repeat:no-repeat;padding-right:32px}
+label{display:block;font-size:12px;font-weight:600;color:var(--mut);margin:12px 0 5px;text-transform:uppercase;letter-spacing:.03em}
+.top{background:var(--ink);color:#fff;padding:calc(14px + env(safe-area-inset-top)) 16px 14px;position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:10px}
+.top .logo{width:34px;height:34px;border-radius:9px;background:var(--acc);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px;flex:none}
+.top h1{font-size:16px;line-height:1.15}
+.top small{opacity:.7;font-size:12px;display:block}
+.top .back{background:none;border:none;color:#fff;font-size:22px;padding:0 6px 0 0}
+.wrap{padding:14px 14px 20px;max-width:760px;margin:0 auto}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:12px}
+.card h3{font-size:13px;text-transform:uppercase;letter-spacing:.04em;color:var(--mut);margin-bottom:10px;display:flex;justify-content:space-between;align-items:center}
+.btn{background:var(--acc);color:#fff;border:none;border-radius:10px;padding:10px 14px;font-weight:600}
+.btn.sec{background:#fff;color:var(--ink);border:1px solid var(--line)}
+.btn.red{background:#fff;color:var(--red);border:1px solid #f1c5c5}
+.btn.sm{padding:6px 10px;font-size:13px;border-radius:8px}
+.btn.wa{background:#25D366}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:12px}
+.stat{background:#fff;border:1px solid var(--line);border-radius:14px;padding:12px 8px;text-align:center}
+.stat b{display:block;font-size:26px;color:var(--ink)}
+.stat span{font-size:12px;color:var(--mut)}
+.item{display:flex;gap:11px;align-items:flex-start;padding:11px 4px;border-bottom:1px solid var(--line)}
+.item:last-child{border-bottom:none}
+.card .item{padding-left:0;padding-right:0}
+.av{width:40px;height:40px;border-radius:50%;background:#E4EEF7;color:var(--ink);font-weight:700;display:flex;align-items:center;justify-content:center;flex:none;font-size:14px}
+.im{flex:1;min-width:0}
+.im b{display:block;font-size:15px}
+.im small{display:block;color:var(--mut);font-size:12.5px;margin-top:2px}
+.tag{font-size:11px;font-weight:700;padding:3px 8px;border-radius:20px;white-space:nowrap;flex:none}
+.tag.activo,.tag.asistio{background:#DDF3E8;color:#14633F}
+.tag.inactivo,.tag.pendiente{background:#FDEBD0;color:#92520B}
+.tag.alta{background:#DCE8FB;color:#1B45A8}
+.tag.falto{background:#FBDADA;color:#9B1C1C}
+.tag.cancelado{background:#E8EBEF;color:#55606D}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin:4px 0}
+.chip{border:1px solid var(--line);background:#fff;border-radius:20px;padding:6px 11px;font-size:13px;color:#33414f}
+.chip.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+.chip.mini{padding:2px 8px;font-size:11.5px;background:#EEF2F6;border-color:#EEF2F6}
+.tabs{display:flex;gap:6px;margin-bottom:12px;overflow-x:auto}
+.tabs button{flex:1;padding:9px 6px;border-radius:10px;border:1px solid var(--line);background:#fff;font-weight:600;color:var(--mut)}
+.tabs button.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+.nav{position:fixed;left:0;right:0;bottom:0;background:#fff;border-top:1px solid var(--line);display:flex;padding:6px 6px calc(6px + env(safe-area-inset-bottom));z-index:30}
+.nav button{flex:1;border:none;background:none;padding:6px 0;color:var(--mut);font-size:11px;font-weight:600}
+.nav button span{display:block;font-size:20px;margin-bottom:1px}
+.nav button.on{color:var(--acc)}
+.kv{display:grid;grid-template-columns:110px 1fr;gap:6px 10px;font-size:14px}
+.kv dt{color:var(--mut)}
+.kv dd{margin:0;word-break:break-word}
+.empty{text-align:center;color:var(--mut);padding:22px 10px;font-size:14px}
+.alert{background:#FFF4E5;border:1px solid #F7D9A8;border-radius:12px;padding:10px 12px;margin-bottom:10px;font-size:13.5px}
+.dnav{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:12px}
+.dnav b{flex:1;text-align:center;text-transform:capitalize}
+.spark{width:100%;height:60px;margin-top:6px}
+.sub{font-size:12px;color:var(--mut)}
+.pre{white-space:pre-wrap;font-size:14px}
+.ovl{position:fixed;inset:0;background:rgba(10,20,30,.5);z-index:50;display:none;align-items:flex-end;justify-content:center}
+.ovl.open{display:flex}
+.sheet{background:#fff;width:100%;max-width:640px;max-height:92vh;border-radius:18px 18px 0 0;display:flex;flex-direction:column}
+.sheet header{padding:14px 16px;border-bottom:1px solid var(--line);font-weight:700;font-size:16px;display:flex;justify-content:space-between}
+.sheet .body{padding:4px 16px 14px;overflow-y:auto;-webkit-overflow-scrolling:touch}
+.sheet footer{padding:10px 16px calc(12px + env(safe-area-inset-bottom));border-top:1px solid var(--line);display:flex;gap:10px}
+.sheet footer button{flex:1;padding:12px}
+.evrow{display:grid;grid-template-columns:1fr 58px 58px 44px 30px;gap:6px;margin-bottom:6px;align-items:center}
+.evrow input{padding:9px 6px}
+.evrow .x{border:none;background:none;color:var(--red);font-size:18px}
+.login{min-height:100vh;display:flex;flex-direction:column;justify-content:center;padding:24px;background:var(--ink);color:#fff}
+.login .logo{width:64px;height:64px;border-radius:16px;background:var(--acc);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:24px;margin-bottom:16px}
+.login h1{font-size:24px;margin-bottom:4px}
+.login p{opacity:.75;margin:0 0 22px}
+.login .err{color:#FFB4B4;font-size:13px;min-height:20px;margin:8px 0}
+.login .ver{opacity:.45;font-size:11px;margin-top:26px}
+.opts button{width:100%;text-align:left;margin-bottom:8px;display:flex;justify-content:space-between;padding:14px}
+hr.s{border:none;border-top:1px solid var(--line);margin:10px 0}
+</style>
+</head>
+<body>
+
+<div id="loginBox" class="login" style="display:none">
+  <div class="logo">FA</div>
+  <h1>Futbolistas Agremiados</h1>
+  <p>Kinesiología · Gestión de pacientes</p>
+  <input id="lgEmail" type="email" inputmode="email" autocapitalize="none" autocomplete="email" placeholder="tu@email.com" onkeydown="if(event.key==='Enter')login()">
+  <div class="err" id="lgErr"></div>
+  <button class="btn" onclick="login()" style="padding:13px">Ingresar</button>
+  <div class="ver" id="ver"></div>
+</div>
+
+<div id="app" style="display:none">
+  <div class="top" id="top"></div>
+  <div class="wrap" id="view"></div>
+  <div class="nav" id="nav"></div>
+</div>
+
+<div class="ovl" id="modal" onclick="if(event.target===this)cerrarModal()">
+  <div class="sheet">
+    <header><span id="mTit"></span><span onclick="cerrarModal()" style="cursor:pointer;color:var(--mut)">✕</span></header>
+    <div class="body" id="mBody"></div>
+    <footer><button class="btn sec" id="mCancel" onclick="cerrarModal()">Cerrar</button><button class="btn" id="mOk" onclick="okModal()">Guardar</button></footer>
+  </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+<script>
+/* ============ CONFIG ============ */
+// Base de datos: usa el proyecto de Firebase que ya tenés (reglas true/true).
+// Todos los datos de esta app viven bajo el nodo ROOT, separados de VORA.
+const FIREBASE_CONFIG={databaseURL:"https://consultorio-fc375-default-rtdb.firebaseio.com"};
+const ROOT="futbolistas_agremiados";
+const VERSION="v2026-10-20-1";
+
+const TRAT=['Ejercicio terapéutico','Terapia manual','Electroterapia','NMES','BFR','Punción seca','Vendaje / taping','Readaptación en campo','Gimnasio / fuerza','Movilidad','Propiocepción','Crioterapia','Elongación','Educación'];
+const TESTS=[['Dorsiflexión (KTW)','cm'],['Flexión rodilla (ROM)','°'],['Extensión rodilla (ROM)','°'],['Fuerza cuádriceps','kg'],['Fuerza isquiotibiales','kg'],['Fuerza aductores','kg'],['Single hop','cm'],['Triple hop','cm'],['Y-Balance','cm'],['Puente glúteo unipodal','reps'],['Nordic','reps']];
+const DX=['LCA – reconstrucción','LCA – lesión parcial','Lesión de isquiotibiales','Tendinopatía proximal de isquiotibiales','Pubalgia / aductores','Tendinopatía rotuliana','Tendinopatía aquiliana','Esguince de tobillo','Lesión meniscal','Lesión muscular de cuádriceps','Lumbalgia'];
+const DIAS=['dom','lun','mar','mié','jue','vie','sáb'];
+const DIASL=['domingo','lunes','martes','miércoles','jueves','viernes','sábado'];
+const MESES=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+const ROLES={admin:'Administrador',kinesiologo:'Kinesiólogo/a',secretaria:'Secretaría'};
+const NODOS=['usuarios','pacientes','sesiones','evaluaciones','turnos','config'];
+
+/* ============ HELPERS ============ */
+const $=s=>document.querySelector(s);
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const p2=n=>String(n).padStart(2,'0');
+const lista=o=>o?Object.values(o):[];
+const ek=e=>e.toLowerCase().trim().replace(/[.#$\[\]\/]/g,',');
+function isoDe(d){return d.getFullYear()+'-'+p2(d.getMonth()+1)+'-'+p2(d.getDate());}
+function hoy(){return isoDe(new Date());}
+function parseD(s){const a=s.split('-').map(Number);return new Date(a[0],a[1]-1,a[2]);}
+function addDias(s,n){const d=parseD(s);d.setDate(d.getDate()+n);return isoDe(d);}
+function difDias(a,b){return Math.round((parseD(b)-parseD(a))/86400000);}
+function fmtF(s){if(!s)return '—';const d=parseD(s);return DIAS[d.getDay()]+' '+d.getDate()+'/'+(d.getMonth()+1)+'/'+String(d.getFullYear()).slice(2);}
+function fmtLargo(s){const d=parseD(s);return DIASL[d.getDay()]+' '+d.getDate()+' de '+MESES[d.getMonth()];}
+function edadDe(n){if(!n)return '';const d=parseD(n),h=new Date();let e=h.getFullYear()-d.getFullYear();if(h.getMonth()<d.getMonth()||(h.getMonth()===d.getMonth()&&h.getDate()<d.getDate()))e--;return e;}
+function ini(n){return String(n||'?').trim().split(/\s+/).slice(0,2).map(x=>x[0]||'').join('').toUpperCase();}
+function primerNombre(n){return String(n||'').trim().split(/\s+/)[0]||'';}
+function waLink(tel,msg){let d=String(tel||'').replace(/\D/g,'');if(!d)return '';d=d.replace(/^0+/,'');if(!d.startsWith('54'))d='549'+d.replace(/^9/,'');return 'https://wa.me/'+d+'?text='+encodeURIComponent(msg);}
+function wa(tel,msg){const u=waLink(tel,msg);if(!u){alert('No hay teléfono cargado.');return;}window.open(u,'_blank');}
+function nombreK(k){return (S.usuarios[k]&&S.usuarios[k].nombre)||'—';}
+function numOrNull(v){const n=parseFloat(String(v).replace(',','.'));return isNaN(n)?null:n;}
+function asim(i,d){const a=numOrNull(i),b=numOrNull(d);if(a===null||b===null)return '';const m=Math.max(Math.abs(a),Math.abs(b));if(!m)return '';return Math.round(Math.abs(a-b)/m*100)+'%';}
+
+/* ============ ESTADO ============ */
+let db;
+const S={usuarios:{},pacientes:{},sesiones:{},evaluaciones:{},turnos:{},config:{},me:null,meKey:null,view:'inicio',filtro:'activo',orden:'recientes',q:'',pid:null,tab:'resumen',fecha:hoy(),soloMios:false};
+const listos={};
+const R=p=>db.ref(ROOT+'/'+p);
+const rol=()=>S.me?S.me.rol:'';
+const esAdmin=()=>rol()==='admin';
+const puedeClin=()=>rol()==='admin'||rol()==='kinesiologo';
+function kinesios(){return lista(S.usuarios).filter(u=>u.rol!=='secretaria');}
+function visible(p){if(esAdmin())return true;if(S.config.soloPropios&&rol()==='kinesiologo')return p.kinesioKey===S.meKey;return true;}
+function pacs(){return lista(S.pacientes).filter(visible);}
+function diasSin(){return parseInt(S.config.diasSinSesion)||14;}
+function mapaSes(){const m={};lista(S.sesiones).forEach(s=>{const o=m[s.pacienteId]||(m[s.pacienteId]={n:0,ultima:''});o.n++;if(s.fecha>o.ultima)o.ultima=s.fecha;});return m;}
+function sesDe(pid){return lista(S.sesiones).filter(s=>s.pacienteId===pid).sort((a,b)=>(b.fecha||'').localeCompare(a.fecha||'')||(b.creado||0)-(a.creado||0));}
+function evDe(pid){return lista(S.evaluaciones).filter(s=>s.pacienteId===pid).sort((a,b)=>(b.fecha||'').localeCompare(a.fecha||''));}
+function epsDe(p){return lista(p.episodios).sort((a,b)=>(b.fechaLesion||'').localeCompare(a.fechaLesion||''));}
+function epAbierto(p){return epsDe(p).find(e=>e.estado!=='cerrado');}
+function dxCorto(p){const e=epAbierto(p)||epsDe(p)[0];return e?(e.dx+(e.lado&&e.lado!=='—'?' ('+e.lado+')':'')):'Sin diagnóstico cargado';}
+
+/* ============ LOGIN ============ */
+function initFB(){if(!db){firebase.initializeApp(FIREBASE_CONFIG);db=firebase.database();}}
+async function login(){
+  const em=$('#lgEmail').value.trim().toLowerCase();
+  const err=$('#lgErr');err.textContent='';
+  if(!/^\S+@\S+\.\S+$/.test(em)){err.textContent='Ingresá un email válido.';return;}
+  try{
+    initFB();
+    const k=ek(em);
+    const snap=await R('usuarios').once('value');
+    const us=snap.val();
+    if(!us){
+      const nombre=prompt('Primer ingreso: vas a ser el administrador. ¿Cómo te llamás?')||em;
+      await R('usuarios/'+k).set({key:k,email:em,nombre:nombre,rol:'admin'});
+    }else if(!us[k]){err.textContent='Ese email no está autorizado. Pedile al administrador que te agregue.';return;}
+    localStorage.setItem('fa_sesion',k);
+    iniciar(k);
+  }catch(e){err.textContent='No se pudo conectar: '+e.message;}
+}
+function iniciar(k){
+  S.meKey=k;
+  $('#loginBox').style.display='none';$('#app').style.display='block';
+  $('#view').innerHTML='<div class="empty">Cargando…</div>';
+  NODOS.forEach(n=>{R(n).on('value',snap=>{S[n]=snap.val()||{};listos[n]=true;if(n==='usuarios')S.me=S.usuarios[k]?Object.assign({key:k},S.usuarios[k]):null;if(todoListo()){if(!S.me){logout(true);return;}renderSoft();}});});
+}
+function todoListo(){return NODOS.every(n=>listos[n]);}
+function logout(forzado){
+  localStorage.removeItem('fa_sesion');
+  try{NODOS.forEach(n=>R(n).off());}catch(e){}
+  NODOS.forEach(n=>{listos[n]=false;S[n]={};});
+  S.me=null;S.meKey=null;S.pid=null;S.view='inicio';
+  $('#app').style.display='none';$('#loginBox').style.display='flex';
+  if(forzado)$('#lgErr').textContent='Tu usuario ya no tiene acceso.';
+}
+
+/* ============ MODAL ============ */
+let modalSave=null;
+function modal(titulo,html,opt){
+  opt=opt||{};
+  $('#mTit').textContent=titulo;$('#mBody').innerHTML=html;modalSave=opt.onSave||null;
+  $('#mOk').style.display=opt.onSave?'':'none';$('#mOk').textContent=opt.guardar||'Guardar';
+  $('#mCancel').textContent=opt.onSave?'Cancelar':'Cerrar';
+  $('#modal').classList.add('open');$('#mBody').scrollTop=0;
+}
+function cerrarModal(){$('#modal').classList.remove('open');modalSave=null;}
+async function okModal(){if(modalSave){const r=await modalSave();if(r===false)return;}cerrarModal();}
+function fld(label,id,val,extra){return '<label>'+label+'</label><input id="'+id+'" value="'+esc(val)+'" '+(extra||'')+'>';}
+function selK(id,sel){return '<select id="'+id+'">'+kinesios().map(u=>'<option value="'+u.key+'"'+(u.key===sel?' selected':'')+'>'+esc(u.nombre)+'</option>').join('')+'</select>';}
+
+/* ============ RENDER ============ */
+function render(){
+  if(!S.me)return;
+  const v=$('#view');
+  let html='';
+  if(S.pid&&S.pacientes[S.pid]&&visible(S.pacientes[S.pid]))html=vPaciente();
+  else{S.pid=null;html=({inicio:vInicio,pacientes:vPacientes,agenda:vAgenda,mas:vMas}[S.view])();}
+  v.innerHTML=html;
+  renderTop();renderNav();
+  if(S.view==='pacientes'&&!S.pid)renderListaPac();
+}
+function renderSoft(){
+  if(!todoListo()||!S.me)return;
+  const a=document.activeElement,y=window.scrollY;
+  if(a&&a.matches&&a.matches('#view input,#view textarea,#view select')){if(S.view==='pacientes'&&!S.pid)renderListaPac();return;}
+  render();window.scrollTo(0,y);
+}
+function renderTop(){
+  const t=$('#top');
+  if(S.pid&&S.pacientes[S.pid]){const p=S.pacientes[S.pid];t.innerHTML='<button class="back" onclick="volver()">‹</button><div style="flex:1;min-width:0"><h1>'+esc(p.nombre)+'</h1><small>'+esc(dxCorto(p))+'</small></div><span class="tag '+p.estado+'">'+estadoTxt(p.estado)+'</span>';}
+  else t.innerHTML='<div class="logo">FA</div><div style="flex:1"><h1>Futbolistas Agremiados</h1><small>'+esc(S.me.nombre)+' · '+ROLES[S.me.rol]+'</small></div>';
+}
+function renderNav(){
+  const items=[['inicio','🏠','Inicio'],['pacientes','👥','Pacientes'],['agenda','📅','Agenda'],['mas','⚙️','Más']];
+  $('#nav').innerHTML=items.map(i=>'<button class="'+(S.view===i[0]&&!S.pid?'on':'')+'" onclick="irA(\''+i[0]+'\')"><span>'+i[1]+'</span>'+i[2]+'</button>').join('');
+}
+function irA(v){S.view=v;S.pid=null;render();window.scrollTo(0,0);}
+function volver(){S.pid=null;render();}
+function estadoTxt(e){return {activo:'Activo',inactivo:'Inactivo',alta:'De alta'}[e]||e;}
+
+/* ============ INICIO ============ */
+function vInicio(){
+  const ps=pacs(),m=mapaSes();
+  const cnt={activo:0,inactivo:0,alta:0};ps.forEach(p=>{if(cnt[p.estado]!==undefined)cnt[p.estado]++;});
+  const h=hoy();
+  const turnosHoy=lista(S.turnos).filter(t=>t.fecha===h&&t.estado!=='cancelado').sort((a,b)=>(a.hora||'').localeCompare(b.hora||''));
+  const lim=diasSin();
+  const sin=ps.filter(p=>p.estado==='activo').map(p=>{const u=m[p.id]?m[p.id].ultima:'';const ref=u||p.ingreso||'';return {p:p,dias:ref?difDias(ref,h):0,u:u};}).filter(x=>x.dias>=lim).sort((a,b)=>b.dias-a.dias).slice(0,8);
+  const ym=h.slice(0,7);
+  const porK={};let totMes=0;
+  lista(S.sesiones).forEach(s=>{if((s.fecha||'').startsWith(ym)){totMes++;porK[s.kinesioKey]=(porK[s.kinesioKey]||0)+1;}});
+  let o='<div class="stats">'+
+   ['activo','inactivo','alta'].map(e=>'<div class="stat" onclick="S.filtro=\''+e+'\';irA(\'pacientes\')"><b>'+cnt[e]+'</b><span>'+({activo:'Activos',inactivo:'Inactivos',alta:'De alta'}[e])+'</span></div>').join('')+'</div>';
+  o+='<div class="card"><h3>Turnos de hoy <span class="sub">'+fmtLargo(h)+'</span></h3>';
+  o+=turnosHoy.length?turnosHoy.map(t=>itemTurno(t)).join(''):'<div class="empty">No hay turnos para hoy.</div>';
+  o+='</div>';
+  o+='<div class="card"><h3>Para contactar <span class="sub">+'+lim+' días sin sesión</span></h3>';
+  o+=sin.length?sin.map(x=>'<div class="item"><div class="av">'+ini(x.p.nombre)+'</div><div class="im" onclick="abrirPac(\''+x.p.id+'\')"><b>'+esc(x.p.nombre)+'</b><small>'+(x.u?'Última sesión hace '+x.dias+' días':'Sin sesiones · ingresó hace '+x.dias+' días')+'</small></div><button class="btn wa sm" onclick="reactivar(\''+x.p.id+'\')">WhatsApp</button></div>').join(''):'<div class="empty">Todos los pacientes activos vienen al día. 👌</div>';
+  o+='</div>';
+  o+='<div class="card"><h3>Sesiones del mes <span class="sub">'+totMes+' en total</span></h3>';
+  const ks=Object.keys(porK).sort((a,b)=>porK[b]-porK[a]);
+  o+=ks.length?ks.map(k=>'<div class="item" style="padding:8px 0"><div class="im"><b style="font-weight:600">'+esc(nombreK(k))+'</b></div><b>'+porK[k]+'</b></div>').join(''):'<div class="empty">Todavía no hay sesiones este mes.</div>';
+  o+='</div>';
+  return o;
+}
+function reactivar(pid){const p=S.pacientes[pid];wa(p.telefono,'Hola '+primerNombre(p.nombre)+'! Te escribo de Futbolistas Agremiados para saber cómo venís con tu recuperación y coordinar tu próxima sesión. ¿Qué día te queda cómodo?');}
+
+/* ============ PACIENTES (LISTA) ============ */
+function vPacientes(){
+  const ps=pacs();const cnt={activo:0,inactivo:0,alta:0};ps.forEach(p=>{if(cnt[p.estado]!==undefined)cnt[p.estado]++;});
+  let o='<div style="display:flex;gap:8px;margin-bottom:10px"><input id="busca" placeholder="Buscar paciente…" value="'+esc(S.q)+'" oninput="S.q=this.value;renderListaPac()"><button class="btn" onclick="formPac()" style="white-space:nowrap">+ Nuevo</button></div>';
+  o+='<div class="tabs">'+['activo','inactivo','alta'].map(e=>'<button class="'+(S.filtro===e?'on':'')+'" onclick="S.filtro=\''+e+'\';render()">'+({activo:'Activos',inactivo:'Inactivos',alta:'Altas'}[e])+' ('+cnt[e]+')</button>').join('')+'</div>';
+  o+='<div class="chips" style="margin-bottom:8px"><span class="sub" style="align-self:center">Orden:</span><span class="chip'+(S.orden==='recientes'?' on':'')+'" onclick="S.orden=\'recientes\';render()">Recientes</span><span class="chip'+(S.orden==='nombre'?' on':'')+'" onclick="S.orden=\'nombre\';render()">Nombre</span><span class="chip'+(S.orden==='sesion'?' on':'')+'" onclick="S.orden=\'sesion\';render()">Última sesión</span></div>';
+  o+='<div class="card" style="padding:4px 14px"><div id="lista"></div></div>';
+  return o;
+}
+function renderListaPac(){
+  const c=$('#lista');if(!c)return;
+  const m=mapaSes(),q=S.q.trim().toLowerCase();
+  let ps=pacs().filter(p=>p.estado===S.filtro);
+  if(q)ps=ps.filter(p=>(p.nombre||'').toLowerCase().includes(q)||dxCorto(p).toLowerCase().includes(q)||(p.club||'').toLowerCase().includes(q));
+  if(S.orden==='nombre')ps.sort((a,b)=>(a.nombre||'').localeCompare(b.nombre||''));
+  else if(S.orden==='sesion')ps.sort((a,b)=>((m[b.id]&&m[b.id].ultima)||'').localeCompare((m[a.id]&&m[a.id].ultima)||''));
+  else ps.sort((a,b)=>(b.lastOpened||b.creado||0)-(a.lastOpened||a.creado||0));
+  const h=hoy();
+  c.innerHTML=ps.length?ps.map(p=>{const x=m[p.id];const ult=x&&x.ultima?'última hace '+difDias(x.ultima,h)+' d':'sin sesiones';
+    return '<div class="item" onclick="abrirPac(\''+p.id+'\')"><div class="av">'+ini(p.nombre)+'</div><div class="im"><b>'+esc(p.nombre)+'</b><small>'+esc(dxCorto(p))+'</small><small>'+esc(nombreK(p.kinesioKey))+' · '+(x?x.n:0)+' sesiones · '+ult+'</small></div><span class="tag '+p.estado+'">'+estadoTxt(p.estado)+'</span></div>';}).join(''):'<div class="empty">'+(q?'Sin resultados.':'No hay pacientes '+({activo:'activos',inactivo:'inactivos',alta:'dados de alta'}[S.filtro])+'.')+'</div>';
+}
+function abrirPac(id){S.pid=id;S.tab='resumen';try{R('pacientes/'+id+'/lastOpened').set(Date.now());}catch(e){}render();window.scrollTo(0,0);}
+
+/* ============ PACIENTE (DETALLE) ============ */
+function vPaciente(){
+  const p=S.pacientes[S.pid];
+  let o='<div class="tabs">'+[['resumen','Resumen'],['sesiones','Sesiones'],['evals','Evaluaciones']].map(t=>'<button class="'+(S.tab===t[0]?'on':'')+'" onclick="S.tab=\''+t[0]+'\';render()">'+t[1]+'</button>').join('')+'</div>';
+  if(S.tab==='resumen')o+=tabResumen(p);else if(S.tab==='sesiones')o+=tabSesiones(p);else o+=tabEvals(p);
+  return o;
+}
+function tabResumen(p){
+  const ses=sesDe(p.id),h=hoy();
+  const ed=edadDe(p.nacimiento);
+  let o='<div class="card"><h3>Datos <button class="btn sec sm" onclick="formPac(\''+p.id+'\')">Editar</button></h3><dl class="kv">'+
+   '<dt>Edad</dt><dd>'+(ed!==''?ed+' años':'—')+'</dd>'+
+   '<dt>Teléfono</dt><dd>'+(p.telefono?esc(p.telefono)+' <button class="btn wa sm" style="margin-left:6px" onclick="wa(S.pacientes[\''+p.id+'\'].telefono,\'Hola '+esc(primerNombre(p.nombre))+'!\')">WhatsApp</button>':'—')+'</dd>'+
+   '<dt>Deporte</dt><dd>'+esc([p.deporte,p.club,p.posicion].filter(Boolean).join(' · ')||'—')+'</dd>'+
+   '<dt>Cobertura</dt><dd>'+esc(p.obraSocial||'—')+'</dd>'+
+   '<dt>Kinesiólogo/a</dt><dd>'+esc(nombreK(p.kinesioKey))+'</dd>'+
+   '<dt>Ingreso</dt><dd>'+fmtF(p.ingreso)+(p.ingreso?' · hace '+difDias(p.ingreso,h)+' d':'')+'</dd>'+
+   '<dt>Sesiones</dt><dd>'+ses.length+(ses[0]?' · última '+fmtF(ses[0].fecha):'')+'</dd></dl></div>';
+  o+='<div class="card"><h3>Estado <button class="btn sec sm" onclick="formEstado(\''+p.id+'\')">Cambiar</button></h3><span class="tag '+p.estado+'">'+estadoTxt(p.estado)+'</span>'+
+   (p.estado!=='activo'&&(p.estadoFecha||p.estadoNota)?'<div class="sub" style="margin-top:8px">'+fmtF(p.estadoFecha)+(p.estadoNota?' — '+esc(p.estadoNota):'')+'</div>':'')+'</div>';
+  const eps=epsDe(p);
+  o+='<div class="card"><h3>Episodios / lesiones'+(puedeClin()?' <button class="btn sec sm" onclick="formEp(\''+p.id+'\')">+ Episodio</button>':'')+'</h3>';
+  o+=eps.length?eps.map(e=>{
+    const dl=e.fechaLesion?difDias(e.fechaLesion,h):null,dc=e.fechaCirugia?difDias(e.fechaCirugia,h):null;
+    return '<div class="item" '+(puedeClin()?'onclick="formEp(\''+p.id+'\',\''+e.id+'\')"':'')+'><div class="im"><b>'+esc(e.dx)+(e.lado&&e.lado!=='—'?' · '+esc(e.lado):'')+'</b>'+
+     '<small>'+(e.fechaLesion?'Lesión '+fmtF(e.fechaLesion)+' ('+dl+' d)':'')+(e.fechaCirugia?' · Cirugía '+fmtF(e.fechaCirugia)+' ('+dc+' d, '+Math.floor(dc/7)+' sem)':'')+'</small>'+
+     (e.fase?'<small>Fase: '+esc(e.fase)+'</small>':'')+(e.medico?'<small>Médico: '+esc(e.medico)+'</small>':'')+(e.objetivos?'<small>Objetivos: '+esc(e.objetivos)+'</small>':'')+'</div><span class="tag '+(e.estado==='cerrado'?'alta':'activo')+'">'+(e.estado==='cerrado'?'Cerrado':'Abierto')+'</span></div>';}).join(''):'<div class="empty">Sin episodios cargados.</div>';
+  o+='</div>';
+  o+='<div class="card"><h3>Antecedentes y notas'+(puedeClin()?' <button class="btn sec sm" onclick="formNotas(\''+p.id+'\')">Editar</button>':'')+'</h3>'+
+   '<div class="sub">Antecedentes</div><div class="pre">'+esc(p.antecedentes||'—')+'</div><hr class="s"><div class="sub">Notas generales</div><div class="pre">'+esc(p.notas||'—')+'</div></div>';
+  if(esAdmin())o+='<button class="btn red" style="width:100%" onclick="borrarPac(\''+p.id+'\')">Eliminar paciente</button>';
+  return o;
+}
+function spark(vals){
+  if(vals.length<2)return '';const w=300,h=60;
+  const pts=vals.map((v,i)=>[(i/(vals.length-1))*(w-10)+5,h-5-(v/10)*(h-10)]);
+  return '<svg viewBox="0 0 '+w+' '+h+'" class="spark"><polyline fill="none" stroke="#1F8A5B" stroke-width="2" points="'+pts.map(p=>p[0].toFixed(1)+','+p[1].toFixed(1)).join(' ')+'"/>'+pts.map(p=>'<circle cx="'+p[0].toFixed(1)+'" cy="'+p[1].toFixed(1)+'" r="3" fill="#1F8A5B"/>').join('')+'</svg>';
+}
+function tabSesiones(p){
+  const ses=sesDe(p.id);
+  let o=puedeClin()?'<button class="btn" style="width:100%;margin-bottom:12px" onclick="formSes(\''+p.id+'\')">+ Registrar sesión</button>':'';
+  const evas=ses.slice().reverse().map(s=>numOrNull(s.evaPost!==''&&s.evaPost!=null?s.evaPost:s.evaPre)).filter(v=>v!==null).slice(-15);
+  if(evas.length>=2)o+='<div class="card"><h3>Dolor (EVA) <span class="sub">últimas '+evas.length+' sesiones</span></h3>'+spark(evas)+'</div>';
+  o+='<div class="card">'+(ses.length?ses.map(s=>{
+    const ep=p.episodios&&p.episodios[s.episodioId];
+    const tr=Array.isArray(s.trat)?s.trat:lista(s.trat);
+    return '<div class="item" '+(puedeClin()?'onclick="formSes(\''+p.id+'\',\''+s.id+'\')"':'')+'><div class="im"><b>'+fmtF(s.fecha)+'</b><small>'+esc(nombreK(s.kinesioKey))+(ep?' · '+esc(ep.dx):'')+'</small>'+
+     (tr.length?'<div class="chips">'+tr.map(t=>'<span class="chip mini">'+esc(t)+'</span>').join('')+'</div>':'')+
+     ((s.evaPre!==''&&s.evaPre!=null)||(s.evaPost!==''&&s.evaPost!=null)||(s.rpe!==''&&s.rpe!=null)?'<small>'+((s.evaPre!==''&&s.evaPre!=null)?'EVA pre '+s.evaPre:'')+((s.evaPost!==''&&s.evaPost!=null)?' · post '+s.evaPost:'')+((s.rpe!==''&&s.rpe!=null)?' · RPE '+s.rpe:'')+'</small>':'')+
+     (s.detalle?'<small style="white-space:pre-wrap">'+esc(s.detalle.length>180?s.detalle.slice(0,180)+'…':s.detalle)+'</small>':'')+'</div></div>';}).join(''):'<div class="empty">Todavía no hay sesiones registradas.</div>')+'</div>';
+  return o;
+}
+function tabEvals(p){
+  const evs=evDe(p.id);
+  let o=puedeClin()?'<button class="btn" style="width:100%;margin-bottom:12px" onclick="formEval(\''+p.id+'\')">+ Nueva evaluación</button>':'';
+  o+=evs.length?evs.map(e=>{
+    const ep=p.episodios&&p.episodios[e.episodioId];
+    const its=Array.isArray(e.items)?e.items:lista(e.items);
+    return '<div class="card" '+(puedeClin()?'onclick="formEval(\''+p.id+'\',\''+e.id+'\')"':'')+'><h3>'+fmtF(e.fecha)+' <span class="sub" style="text-transform:none">'+esc(nombreK(e.kinesioKey))+'</span></h3>'+(ep?'<div class="sub" style="margin-bottom:6px">'+esc(ep.dx)+'</div>':'')+
+     (its.length?'<table style="width:100%;border-collapse:collapse;font-size:13.5px"><tr style="color:var(--mut);text-align:left"><th style="font-weight:600">Test</th><th>Izq</th><th>Der</th><th>Asim.</th></tr>'+its.map(i=>'<tr style="border-top:1px solid var(--line)"><td style="padding:6px 0">'+esc(i.test)+'</td><td>'+esc(i.izq)+(i.izq!==''&&i.unidad?' '+esc(i.unidad):'')+'</td><td>'+esc(i.der)+(i.der!==''&&i.unidad?' '+esc(i.unidad):'')+'</td><td><b>'+asim(i.izq,i.der)+'</b></td></tr>').join('')+'</table>':'')+
+     (e.notas?'<div class="pre" style="margin-top:8px">'+esc(e.notas)+'</div>':'')+'</div>';}).join(''):'<div class="card"><div class="empty">Sin evaluaciones.</div></div>';
+  return o;
+}
+
+/* ============ FORMULARIOS: PACIENTE ============ */
+function formPac(id){
+  const p=id?S.pacientes[id]:{};
+  const kSel=p.kinesioKey||(puedeClin()?S.meKey:(kinesios()[0]||{}).key);
+  modal(id?'Editar paciente':'Nuevo paciente',
+    fld('Nombre y apellido','f_nombre',p.nombre,'autocapitalize="words"')+
+    '<div class="row"><div><label>Fecha de nacimiento</label><input type="date" id="f_nac" value="'+esc(p.nacimiento)+'"></div><div>'+fld('Teléfono','f_tel',p.telefono,'type="tel" inputmode="tel"')+'</div></div>'+
+    '<div class="row"><div>'+fld('Deporte','f_dep',p.deporte||'Fútbol')+'</div><div>'+fld('Club / equipo','f_club',p.club)+'</div></div>'+
+    '<div class="row"><div>'+fld('Posición','f_pos',p.posicion)+'</div><div>'+fld('Cobertura','f_os',p.obraSocial,'placeholder="Gremio, obra social…"')+'</div></div>'+
+    '<label>Kinesiólogo/a a cargo</label>'+selK('f_k',kSel),
+    {onSave:async()=>{
+      const nombre=$('#f_nombre').value.trim();if(!nombre){alert('Falta el nombre.');return false;}
+      const d={nombre:nombre,nacimiento:$('#f_nac').value,telefono:$('#f_tel').value.trim(),deporte:$('#f_dep').value.trim(),club:$('#f_club').value.trim(),posicion:$('#f_pos').value.trim(),obraSocial:$('#f_os').value.trim(),kinesioKey:$('#f_k').value};
+      if(id){await R('pacientes/'+id).update(d);}
+      else{const nid=R('pacientes').push().key;Object.assign(d,{id:nid,estado:'activo',ingreso:hoy(),creado:Date.now(),lastOpened:Date.now()});await R('pacientes/'+nid).set(d);
+        S.filtro='activo';setTimeout(()=>{if(confirm('¿Agendar el primer turno de '+nombre+'?'))formTurno(null,nid);else abrirPac(nid);},150);}
+    }});
+}
+function formEstado(id){
+  const p=S.pacientes[id];
+  modal('Estado del paciente',
+   '<div class="chips" id="f_est">'+['activo','inactivo','alta'].map(e=>'<span class="chip'+(p.estado===e?' on':'')+'" data-v="'+e+'" onclick="document.querySelectorAll(\'#f_est .chip\').forEach(c=>c.classList.remove(\'on\'));this.classList.add(\'on\');estCambio()">'+estadoTxt(e)+'</span>').join('')+'</div>'+
+   '<div id="f_estx"><label>Fecha</label><input type="date" id="f_efe" value="'+esc(p.estadoFecha||hoy())+'"><label id="f_enl">Nota</label><textarea id="f_eno">'+esc(p.estadoNota||'')+'</textarea>'+
+   '<label style="display:flex;gap:8px;align-items:center;text-transform:none;font-size:14px;color:#1b2530" id="f_cierra"><input type="checkbox" id="f_ce" style="width:auto" checked> Cerrar los episodios abiertos</label></div>',
+   {onSave:async()=>{
+     const e=document.querySelector('#f_est .chip.on').dataset.v;
+     const d={estado:e};
+     if(e==='activo'){d.estadoFecha=null;d.estadoNota=null;}else{d.estadoFecha=$('#f_efe').value||hoy();d.estadoNota=$('#f_eno').value.trim();}
+     await R('pacientes/'+id).update(d);
+     if(e==='alta'&&$('#f_ce').checked){const up={};epsDe(p).forEach(x=>{if(x.estado!=='cerrado')up[x.id+'/estado']='cerrado';});if(Object.keys(up).length)await R('pacientes/'+id+'/episodios').update(up);}
+   }});
+  estCambio();
+}
+function estCambio(){
+  const e=document.querySelector('#f_est .chip.on').dataset.v;
+  $('#f_estx').style.display=e==='activo'?'none':'block';
+  $('#f_enl').textContent=e==='alta'?'Criterios de alta / observaciones':'Motivo de inactividad';
+  $('#f_cierra').style.display=e==='alta'?'flex':'none';
+}
+function formNotas(id){
+  const p=S.pacientes[id];
+  modal('Antecedentes y notas','<label>Antecedentes</label><textarea id="f_ant" style="min-height:110px">'+esc(p.antecedentes||'')+'</textarea><label>Notas generales</label><textarea id="f_not" style="min-height:110px">'+esc(p.notas||'')+'</textarea>',
+   {onSave:async()=>{await R('pacientes/'+id).update({antecedentes:$('#f_ant').value.trim(),notas:$('#f_not').value.trim()});}});
+}
+async function borrarPac(id){
+  const p=S.pacientes[id];
+  if(!confirm('¿Eliminar a '+p.nombre+' y TODAS sus sesiones, evaluaciones y turnos? No se puede deshacer.'))return;
+  const up={};up['pacientes/'+id]=null;
+  lista(S.sesiones).forEach(s=>{if(s.pacienteId===id)up['sesiones/'+s.id]=null;});
+  lista(S.evaluaciones).forEach(s=>{if(s.pacienteId===id)up['evaluaciones/'+s.id]=null;});
+  lista(S.turnos).forEach(s=>{if(s.pacienteId===id)up['turnos/'+s.id]=null;});
+  await R('').update(up);S.pid=null;render();
+}
+
+/* ============ FORMULARIOS: EPISODIO ============ */
+function formEp(pid,eid){
+  const p=S.pacientes[pid];const e=eid?p.episodios[eid]:{estado:'abierto',lado:'—'};
+  modal(eid?'Editar episodio':'Nuevo episodio',
+   '<label>Diagnóstico</label><input id="e_dx" list="dxl" value="'+esc(e.dx)+'" placeholder="Ej: LCA – reconstrucción"><datalist id="dxl">'+DX.map(d=>'<option value="'+esc(d)+'">').join('')+'</datalist>'+
+   '<div class="row"><div><label>Lado</label><select id="e_lado">'+['—','Izquierdo','Derecho','Bilateral'].map(l=>'<option'+(e.lado===l?' selected':'')+'>'+l+'</option>').join('')+'</select></div><div><label>Estado</label><select id="e_est"><option value="abierto"'+(e.estado!=='cerrado'?' selected':'')+'>Abierto</option><option value="cerrado"'+(e.estado==='cerrado'?' selected':'')+'>Cerrado</option></select></div></div>'+
+   '<div class="row"><div><label>Fecha de lesión</label><input type="date" id="e_fl" value="'+esc(e.fechaLesion)+'"></div><div><label>Fecha de cirugía</label><input type="date" id="e_fc" value="'+esc(e.fechaCirugia)+'"></div></div>'+
+   fld('Médico / cirujano','e_med',e.medico)+fld('Fase actual','e_fase',e.fase,'placeholder="Ej: Fase 2 – fuerza"')+
+   '<label>Objetivos</label><textarea id="e_obj">'+esc(e.objetivos||'')+'</textarea>'+
+   (eid?'<button class="btn red sm" style="margin-top:14px" onclick="borrarEp(\''+pid+'\',\''+eid+'\')">Eliminar episodio</button>':''),
+   {onSave:async()=>{
+     const dx=$('#e_dx').value.trim();if(!dx){alert('Falta el diagnóstico.');return false;}
+     const id=eid||R('pacientes/'+pid+'/episodios').push().key;
+     await R('pacientes/'+pid+'/episodios/'+id).set({id:id,dx:dx,lado:$('#e_lado').value,estado:$('#e_est').value,fechaLesion:$('#e_fl').value,fechaCirugia:$('#e_fc').value,medico:$('#e_med').value.trim(),fase:$('#e_fase').value.trim(),objetivos:$('#e_obj').value.trim()});
+   }});
+}
+async function borrarEp(pid,eid){if(!confirm('¿Eliminar este episodio? Las sesiones quedan, pero sin episodio asociado.'))return;await R('pacientes/'+pid+'/episodios/'+eid).remove();cerrarModal();}
+function opcEps(p,sel){const eps=epsDe(p);return '<option value="">— sin episodio —</option>'+eps.map(e=>'<option value="'+e.id+'"'+(e.id===sel?' selected':'')+'>'+esc(e.dx)+(e.estado==='cerrado'?' (cerrado)':'')+'</option>').join('');}
+
+/* ============ FORMULARIOS: SESIÓN ============ */
+function formSes(pid,sid,fechaIni){
+  const p=S.pacientes[pid];const s=sid?S.sesiones[sid]:{};
+  const tr=Array.isArray(s.trat)?s.trat:lista(s.trat);
+  const epDef=s.episodioId||(epAbierto(p)||{}).id||'';
+  modal(sid?'Editar sesión':'Registrar sesión',
+   '<div class="row"><div><label>Fecha</label><input type="date" id="s_f" value="'+esc(s.fecha||fechaIni||hoy())+'"></div><div><label>Episodio</label><select id="s_ep">'+opcEps(p,epDef)+'</select></div></div>'+
+   (esAdmin()?'<label>Kinesiólogo/a</label>'+selK('s_k',s.kinesioKey||S.meKey):'')+
+   (!sid&&sesDe(pid).length?'<button class="btn sec sm" style="margin-top:12px" onclick="copiarUlt(\''+pid+'\')">↺ Copiar última sesión</button>':'')+
+   '<div class="row3"><div><label>EVA pre</label><input id="s_pre" inputmode="decimal" placeholder="0-10" value="'+esc(s.evaPre)+'"></div><div><label>EVA post</label><input id="s_post" inputmode="decimal" placeholder="0-10" value="'+esc(s.evaPost)+'"></div><div><label>RPE</label><input id="s_rpe" inputmode="decimal" placeholder="0-10" value="'+esc(s.rpe)+'"></div></div>'+
+   '<label>Tratamiento realizado</label><div class="chips" id="s_tr">'+TRAT.concat(tr.filter(t=>TRAT.indexOf(t)<0)).map(t=>'<span class="chip'+(tr.indexOf(t)>=0?' on':'')+'" data-v="'+esc(t)+'" onclick="this.classList.toggle(\'on\')">'+esc(t)+'</span>').join('')+'</div>'+
+   '<label>Ejercicios / cargas / detalle</label><textarea id="s_det" style="min-height:120px" placeholder="Ej: Nordic 3x6, puente unipodal 3x10…">'+esc(s.detalle||'')+'</textarea>'+
+   '<label>Notas clínicas</label><textarea id="s_not">'+esc(s.notas||'')+'</textarea>'+
+   '<label>Indicaciones para la próxima</label><textarea id="s_ind" style="min-height:60px">'+esc(s.indicaciones||'')+'</textarea>'+
+   (sid?'<button class="btn red sm" style="margin-top:14px" onclick="borrarSes(\''+sid+'\')">Eliminar sesión</button>':''),
+   {onSave:async()=>{
+     const f=$('#s_f').value;if(!f){alert('Falta la fecha.');return false;}
+     const id=sid||R('sesiones').push().key;
+     const trat=[...document.querySelectorAll('#s_tr .chip.on')].map(e=>e.dataset.v);
+     const num=v=>{const n=numOrNull(v);return n===null?'':n;};
+     await R('sesiones/'+id).set({id:id,pacienteId:pid,episodioId:$('#s_ep').value,fecha:f,kinesioKey:esAdmin()?$('#s_k').value:(s.kinesioKey||S.meKey),evaPre:num($('#s_pre').value),evaPost:num($('#s_post').value),rpe:num($('#s_rpe').value),trat:trat.length?trat:'',detalle:$('#s_det').value.trim(),notas:$('#s_not').value.trim(),indicaciones:$('#s_ind').value.trim(),creado:s.creado||Date.now()});
+     R('pacientes/'+pid+'/lastOpened').set(Date.now());
+   }});
+}
+function copiarUlt(pid){
+  const u=sesDe(pid)[0];if(!u)return;
+  const tr=Array.isArray(u.trat)?u.trat:lista(u.trat);
+  document.querySelectorAll('#s_tr .chip').forEach(c=>c.classList.toggle('on',tr.indexOf(c.dataset.v)>=0));
+  $('#s_det').value=u.detalle||'';
+}
+async function borrarSes(sid){if(!confirm('¿Eliminar esta sesión?'))return;await R('sesiones/'+sid).remove();cerrarModal();}
+
+/* ============ FORMULARIOS: EVALUACIÓN ============ */
+function formEval(pid,eid){
+  const p=S.pacientes[pid];const e=eid?S.evaluaciones[eid]:{};
+  const its=Array.isArray(e.items)?e.items:lista(e.items);
+  modal(eid?'Editar evaluación':'Nueva evaluación',
+   '<div class="row"><div><label>Fecha</label><input type="date" id="v_f" value="'+esc(e.fecha||hoy())+'"></div><div><label>Episodio</label><select id="v_ep">'+opcEps(p,e.episodioId||(epAbierto(p)||{}).id||'')+'</select></div></div>'+
+   '<label>Mediciones</label><div class="sub" style="margin-bottom:6px">Test · Izq · Der · unidad</div><div id="evRows"></div>'+
+   '<select id="evPre" onchange="addPre()"><option value="">+ Agregar test frecuente…</option>'+TESTS.map((t,i)=>'<option value="'+i+'">'+esc(t[0])+'</option>').join('')+'</select>'+
+   '<button class="btn sec sm" style="margin-top:8px" onclick="evRow(\'\',\'\',\'\',\'\')">+ Fila libre</button>'+
+   '<label>Observaciones</label><textarea id="v_not">'+esc(e.notas||'')+'</textarea>'+
+   (eid?'<button class="btn red sm" style="margin-top:14px" onclick="borrarEv(\''+eid+'\')">Eliminar evaluación</button>':''),
+   {onSave:async()=>{
+     const items=[...document.querySelectorAll('#evRows .evrow')].map(r=>({test:r.querySelector('.e_t').value.trim(),izq:r.querySelector('.e_i').value.trim(),der:r.querySelector('.e_d').value.trim(),unidad:r.querySelector('.e_u').value.trim()})).filter(i=>i.test||i.izq||i.der);
+     const id=eid||R('evaluaciones').push().key;
+     await R('evaluaciones/'+id).set({id:id,pacienteId:pid,episodioId:$('#v_ep').value,fecha:$('#v_f').value||hoy(),kinesioKey:e.kinesioKey||S.meKey,items:items.length?items:'',notas:$('#v_not').value.trim(),creado:e.creado||Date.now()});
+   }});
+  its.forEach(i=>evRow(i.test,i.izq,i.der,i.unidad));
+  if(!its.length)evRow('','','','');
+}
+function evRow(t,i,d,u){
+  const div=document.createElement('div');div.className='evrow';
+  div.innerHTML='<input class="e_t" placeholder="Test" value="'+esc(t)+'"><input class="e_i" inputmode="decimal" placeholder="Izq" value="'+esc(i)+'"><input class="e_d" inputmode="decimal" placeholder="Der" value="'+esc(d)+'"><input class="e_u" placeholder="u" value="'+esc(u)+'"><button class="x" onclick="this.parentNode.remove()">✕</button>';
+  $('#evRows').appendChild(div);
+}
+function addPre(){const s=$('#evPre');if(s.value==='')return;const t=TESTS[parseInt(s.value)];evRow(t[0],'','',t[1]);s.value='';}
+async function borrarEv(eid){if(!confirm('¿Eliminar esta evaluación?'))return;await R('evaluaciones/'+eid).remove();cerrarModal();}
+
+/* ============ AGENDA ============ */
+function itemTurno(t){
+  const nom=t.pacienteId&&S.pacientes[t.pacienteId]?S.pacientes[t.pacienteId].nombre:(t.nombreLibre||'—');
+  return '<div class="item" onclick="detalleTurno(\''+t.id+'\')"><div class="av" style="font-size:12px;width:46px;border-radius:12px">'+esc(t.hora||'--:--')+'</div><div class="im"><b>'+esc(nom)+'</b><small>'+esc(nombreK(t.kinesioKey))+(t.nota?' · '+esc(t.nota):'')+'</small></div><span class="tag '+t.estado+'">'+({pendiente:'Pendiente',asistio:'Asistió',falto:'Faltó',cancelado:'Cancelado'}[t.estado]||t.estado)+'</span></div>';
+}
+function vAgenda(){
+  const f=S.fecha;
+  let ts=lista(S.turnos).filter(t=>t.fecha===f);
+  if(S.soloMios)ts=ts.filter(t=>t.kinesioKey===S.meKey);
+  ts.sort((a,b)=>(a.hora||'').localeCompare(b.hora||''));
+  let o='<div class="dnav"><button class="btn sec sm" onclick="S.fecha=addDias(S.fecha,-1);render()">‹</button><b>'+fmtLargo(f)+'</b><button class="btn sec sm" onclick="S.fecha=addDias(S.fecha,1);render()">›</button></div>';
+  o+='<div style="display:flex;gap:8px;margin-bottom:12px"><button class="btn sec" style="flex:1" onclick="S.fecha=hoy();render()">Hoy</button><input type="date" value="'+f+'" onchange="if(this.value){S.fecha=this.value;render();}" style="flex:1.4"><button class="btn" onclick="formTurno()">+ Turno</button></div>';
+  o+='<div class="chips" style="margin-bottom:8px"><span class="chip'+(!S.soloMios?' on':'')+'" onclick="S.soloMios=false;render()">Todos</span><span class="chip'+(S.soloMios?' on':'')+'" onclick="S.soloMios=true;render()">Solo míos</span></div>';
+  o+='<div class="card" style="padding:4px 14px">'+(ts.length?ts.map(itemTurno).join(''):'<div class="empty">Sin turnos para este día.</div>')+'</div>';
+  return o;
+}
+function formTurno(tid,pidIni){
+  const t=tid?S.turnos[tid]:{};
+  const ps=pacs().filter(p=>p.estado==='activo'||p.id===t.pacienteId||p.id===pidIni).sort((a,b)=>(a.nombre||'').localeCompare(b.nombre||''));
+  const sel=t.pacienteId||pidIni||'';
+  modal(tid?'Editar turno':'Nuevo turno',
+   '<label>Paciente</label><select id="t_p" onchange="$(\'#t_lib\').style.display=this.value?\'none\':\'block\'"><option value="">— otra persona / no registrada —</option>'+ps.map(p=>'<option value="'+p.id+'"'+(p.id===sel?' selected':'')+'>'+esc(p.nombre)+'</option>').join('')+'</select>'+
+   '<div id="t_lib" style="display:'+(sel?'none':'block')+'">'+fld('Nombre','t_nl',t.nombreLibre)+'</div>'+
+   '<div class="row"><div><label>Fecha</label><input type="date" id="t_f" value="'+esc(t.fecha||S.fecha)+'"></div><div><label>Hora</label><input type="time" id="t_h" value="'+esc(t.hora||'09:00')+'"></div></div>'+
+   '<label>Kinesiólogo/a</label>'+selK('t_k',t.kinesioKey||(puedeClin()?S.meKey:''))+
+   (!tid?'<label>Repetir semanalmente (cantidad de semanas)</label><input id="t_rep" type="number" min="1" max="26" value="1" inputmode="numeric">':'')+
+   fld('Nota','t_n',t.nota),
+   {onSave:async()=>{
+     const pid=$('#t_p').value,nl=$('#t_nl')?$('#t_nl').value.trim():'';
+     if(!pid&&!nl){alert('Elegí un paciente o escribí un nombre.');return false;}
+     const f=$('#t_f').value;if(!f){alert('Falta la fecha.');return false;}
+     const base={pacienteId:pid,nombreLibre:pid?'':nl,hora:$('#t_h').value,kinesioKey:$('#t_k').value,nota:$('#t_n').value.trim()};
+     if(tid){await R('turnos/'+tid).update(Object.assign(base,{fecha:f}));}
+     else{const n=Math.max(1,Math.min(26,parseInt($('#t_rep').value)||1));const up={};
+       for(let i=0;i<n;i++){const id=R('turnos').push().key;up[id]=Object.assign({id:id,estado:'pendiente',creado:Date.now()},base,{fecha:addDias(f,7*i)});}
+       await R('turnos').update(up);S.fecha=f;}
+   }});
+}
+function detalleTurno(tid){
+  const t=S.turnos[tid];if(!t)return;
+  const p=t.pacienteId?S.pacientes[t.pacienteId]:null;
+  const nom=p?p.nombre:(t.nombreLibre||'—');
+  modal('Turno',
+   '<div style="margin-top:12px"><b style="font-size:17px">'+esc(nom)+'</b><div class="sub">'+fmtLargo(t.fecha)+' · '+esc(t.hora||'')+' · '+esc(nombreK(t.kinesioKey))+'</div>'+(t.nota?'<div class="pre" style="margin-top:6px">'+esc(t.nota)+'</div>':'')+'</div>'+
+   '<label>Estado</label><div class="chips">'+[['pendiente','Pendiente'],['asistio','Asistió'],['falto','Faltó'],['cancelado','Cancelado']].map(e=>'<span class="chip'+(t.estado===e[0]?' on':'')+'" onclick="setEstadoTurno(\''+tid+'\',\''+e[0]+'\')">'+e[1]+'</span>').join('')+'</div>'+
+   '<div style="display:flex;flex-direction:column;gap:8px;margin-top:16px">'+
+   (p?'<button class="btn sec" onclick="cerrarModal();abrirPac(\''+p.id+'\')">Abrir ficha</button>':'')+
+   (p&&puedeClin()?'<button class="btn" onclick="cerrarModal();formSes(\''+p.id+'\',null,\''+t.fecha+'\')">Registrar sesión</button>':'')+
+   (p&&p.telefono?'<button class="btn wa" onclick="wa(S.pacientes[\''+p.id+'\'].telefono,\'Hola '+esc(primerNombre(p.nombre))+'! Te recuerdo tu turno de kinesiología en Futbolistas Agremiados el '+fmtLargo(t.fecha)+' a las '+esc(t.hora||'')+'. ¡Te espero!\')">Recordatorio por WhatsApp</button>':'')+
+   '<button class="btn sec" onclick="cerrarModal();formTurno(\''+tid+'\')">Editar turno</button>'+
+   '<button class="btn red" onclick="borrarTurno(\''+tid+'\')">Eliminar turno</button></div>');
+}
+async function setEstadoTurno(tid,e){await R('turnos/'+tid+'/estado').set(e);cerrarModal();}
+async function borrarTurno(tid){if(!confirm('¿Eliminar este turno?'))return;await R('turnos/'+tid).remove();cerrarModal();}
+
+/* ============ MÁS ============ */
+function vMas(){
+  let o='<div class="card"><h3>Mi usuario</h3><div><b>'+esc(S.me.nombre)+'</b></div><div class="sub">'+esc(S.me.email)+' · '+ROLES[S.me.rol]+'</div></div>';
+  o+='<div class="opts">';
+  if(esAdmin()){
+    o+='<button class="btn sec" onclick="vUsuarios()">👥 Usuarios y roles <span>›</span></button>';
+    o+='<button class="btn sec" onclick="formConfig()">🔧 Configuración <span>›</span></button>';
+    o+='<button class="btn sec" onclick="backup()">💾 Descargar backup (JSON) <span>›</span></button>';
+  }
+  o+='<button class="btn sec" onclick="logout()">🚪 Cerrar sesión <span>›</span></button></div>';
+  o+='<div class="sub" style="text-align:center;margin-top:14px">Futbolistas Agremiados · '+VERSION+'</div>';
+  return o;
+}
+function formConfig(){
+  const c=S.config;
+  modal('Configuración',
+   '<label>Días sin sesión para avisar</label><input id="c_d" type="number" inputmode="numeric" min="1" value="'+diasSin()+'">'+
+   '<label style="display:flex;gap:8px;align-items:center;text-transform:none;font-size:14px;color:#1b2530;margin-top:18px"><input type="checkbox" id="c_s" style="width:auto"'+(c.soloPropios?' checked':'')+'> Cada kinesiólogo/a ve solo sus pacientes</label><div class="sub">El administrador y la secretaría siempre ven todos.</div>',
+   {onSave:async()=>{await R('config').set({diasSinSesion:parseInt($('#c_d').value)||14,soloPropios:$('#c_s').checked});}});
+}
+function vUsuarios(){
+  const us=lista(S.usuarios).sort((a,b)=>(a.nombre||'').localeCompare(b.nombre||''));
+  modal('Usuarios y roles',
+   us.map(u=>'<div class="item" onclick="formUsuario(\''+u.key+'\')"><div class="av">'+ini(u.nombre)+'</div><div class="im"><b>'+esc(u.nombre)+'</b><small>'+esc(u.email)+'</small></div><span class="tag activo">'+ROLES[u.rol]+'</span></div>').join('')+
+   '<button class="btn" style="width:100%;margin-top:14px" onclick="formUsuario()">+ Agregar usuario</button>'+
+   '<div class="sub" style="margin-top:10px">El acceso es por email: quien esté en esta lista puede ingresar con su correo.</div>');
+}
+function formUsuario(key){
+  const u=key?S.usuarios[key]:{rol:'kinesiologo'};
+  modal(key?'Editar usuario':'Nuevo usuario',
+   fld('Nombre','u_n',u.nombre,'autocapitalize="words"')+
+   fld('Email','u_e',u.email,'type="email" inputmode="email" autocapitalize="none"'+(key?' disabled':''))+
+   '<label>Rol</label><select id="u_r">'+Object.keys(ROLES).map(r=>'<option value="'+r+'"'+(u.rol===r?' selected':'')+'>'+ROLES[r]+'</option>').join('')+'</select>'+
+   '<div class="sub" style="margin-top:8px">Administrador: todo. Kinesiólogo/a: pacientes, sesiones, evaluaciones y agenda. Secretaría: pacientes (datos personales), agenda y WhatsApp, sin datos clínicos.</div>'+
+   (key&&key!==S.meKey?'<button class="btn red sm" style="margin-top:14px" onclick="borrarUsuario(\''+key+'\')">Eliminar usuario</button>':''),
+   {onSave:async()=>{
+     const nombre=$('#u_n').value.trim(),email=(key?u.email:$('#u_e').value.trim().toLowerCase()),r=$('#u_r').value;
+     if(!nombre||!/^\S+@\S+\.\S+$/.test(email)){alert('Completá nombre y un email válido.');return false;}
+     const k=key||ek(email);
+     if(!key&&S.usuarios[k]){alert('Ese email ya existe.');return false;}
+     if(key&&u.rol==='admin'&&r!=='admin'&&lista(S.usuarios).filter(x=>x.rol==='admin').length<2){alert('Tiene que quedar al menos un administrador.');return false;}
+     await R('usuarios/'+k).set({key:k,email:email,nombre:nombre,rol:r});
+     setTimeout(vUsuarios,200);return true;
+   }});
+}
+async function borrarUsuario(key){
+  const u=S.usuarios[key];
+  if(u.rol==='admin'&&lista(S.usuarios).filter(x=>x.rol==='admin').length<2){alert('Tiene que quedar al menos un administrador.');return;}
+  if(!confirm('¿Quitar el acceso a '+u.nombre+'? Sus pacientes y sesiones se conservan.'))return;
+  await R('usuarios/'+key).remove();cerrarModal();setTimeout(vUsuarios,200);
+}
+function backup(){
+  const data={fecha:new Date().toISOString(),version:VERSION};NODOS.forEach(n=>data[n]=S[n]);
+  const blob=new Blob([JSON.stringify(data,null,1)],{type:'application/json'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='fa-backup-'+hoy()+'.json';document.body.appendChild(a);a.click();a.remove();
+}
+
+/* ============ ARRANQUE ============ */
+(function(){
+  $('#ver').textContent=VERSION;
+  try{initFB();}catch(e){}
+  const k=localStorage.getItem('fa_sesion');
+  if(k){
+    R('usuarios/'+k).once('value').then(s=>{if(s.val())iniciar(k);else{localStorage.removeItem('fa_sesion');$('#loginBox').style.display='flex';}}).catch(()=>{$('#loginBox').style.display='flex';});
+  }else $('#loginBox').style.display='flex';
+})();
+</script>
+</body>
+</html>
