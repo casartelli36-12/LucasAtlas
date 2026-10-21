@@ -82,6 +82,15 @@ label{display:block;font-size:12px;font-weight:600;color:var(--mut);margin:12px 
 .evrow{display:grid;grid-template-columns:1fr 58px 58px 44px 30px;gap:6px;margin-bottom:6px;align-items:center}
 .evrow input{padding:9px 6px}
 .evrow .x{border:none;background:none;color:var(--red);font-size:18px}
+.logo.img,.top .logo.img,.login .logo.img{background:#fff;padding:3px}
+.logo img{width:100%;height:100%;object-fit:contain;border-radius:inherit}
+.exc{border:1px solid var(--line);border-radius:12px;padding:10px;margin-bottom:8px;background:#FAFBFC}
+.exc .r1{display:flex;gap:6px;margin-bottom:6px}
+.exc .r1 .xb{border:none;background:none;color:var(--red);font-size:20px;padding:0 4px}
+.exc .r2{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.exc .r2 span{display:block;font-size:10.5px;color:var(--mut);margin-bottom:2px;text-transform:uppercase}
+.exc input{padding:9px 8px}
+.exh{font-size:12px;color:var(--acc);margin:5px 0 0}
 .login{min-height:100vh;display:flex;flex-direction:column;justify-content:center;padding:24px;background:var(--ink);color:#fff}
 .login .logo{width:64px;height:64px;border-radius:16px;background:var(--acc);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:24px;margin-bottom:16px}
 .login h1{font-size:24px;margin-bottom:4px}
@@ -95,7 +104,7 @@ hr.s{border:none;border-top:1px solid var(--line);margin:10px 0}
 <body>
 
 <div id="loginBox" class="login" style="display:none">
-  <div class="logo">FA</div>
+  <div id="loginLogo"></div>
   <h1>Futbolistas Agremiados</h1>
   <p>Kinesiología · Gestión de pacientes</p>
   <input id="lgEmail" type="email" inputmode="email" autocapitalize="none" autocomplete="email" placeholder="tu@email.com" onkeydown="if(event.key==='Enter')login()">
@@ -126,16 +135,27 @@ hr.s{border:none;border-top:1px solid var(--line);margin:10px 0}
 // Todos los datos de esta app viven bajo el nodo ROOT, separados de VORA.
 const FIREBASE_CONFIG={databaseURL:"https://consultorio-fc375-default-rtdb.firebaseio.com"};
 const ROOT="futbolistas_agremiados";
-const VERSION="v2026-10-20-1";
+const VERSION="v2026-10-20-2";
 
 const TRAT=['Ejercicio terapéutico','Terapia manual','Electroterapia','NMES','BFR','Punción seca','Vendaje / taping','Readaptación en campo','Gimnasio / fuerza','Movilidad','Propiocepción','Crioterapia','Elongación','Educación'];
 const TESTS=[['Dorsiflexión (KTW)','cm'],['Flexión rodilla (ROM)','°'],['Extensión rodilla (ROM)','°'],['Fuerza cuádriceps','kg'],['Fuerza isquiotibiales','kg'],['Fuerza aductores','kg'],['Single hop','cm'],['Triple hop','cm'],['Y-Balance','cm'],['Puente glúteo unipodal','reps'],['Nordic','reps']];
 const DX=['LCA – reconstrucción','LCA – lesión parcial','Lesión de isquiotibiales','Tendinopatía proximal de isquiotibiales','Pubalgia / aductores','Tendinopatía rotuliana','Tendinopatía aquiliana','Esguince de tobillo','Lesión meniscal','Lesión muscular de cuádriceps','Lumbalgia'];
+const LOGO=''; // se completa con la imagen del logo (data URI)
+const EJ={
+ 'Isquiotibiales':['Nordic','Puente glúteo unipodal','Peso muerto rumano','Peso muerto unipodal','Curl femoral','Curl femoral deslizante','Hip thrust','Good morning'],
+ 'Cuádriceps':['Sentadilla','Sentadilla búlgara','Prensa','Extensión de rodilla','Step up','Zancada','Sentadilla isométrica'],
+ 'Aductores / cadera':['Copenhagen','Squeeze con pelota','Sentadilla sumo','Abducción en banda','Monster walk','Elevación lateral'],
+ 'Pantorrilla / pie':['Elevación de talones','Elevación de talones sóleo','Salto a la soga','Isométrico de gemelos'],
+ 'Pliometría':['Saltos CMJ','Drop jump','Saltos laterales','Skipping','Saltos a un pie','Box jump'],
+ 'Core':['Plancha','Plancha lateral','Pallof press','Dead bug','Bird dog'],
+ 'Carrera / campo':['Trote','Aceleraciones','Sprints','Cambios de dirección','Técnica de carrera'],
+ 'Movilidad / control':['Movilidad de cadera','Movilidad de tobillo','Equilibrio unipodal','Propiocepción en bosu']
+};
 const DIAS=['dom','lun','mar','mié','jue','vie','sáb'];
 const DIASL=['domingo','lunes','martes','miércoles','jueves','viernes','sábado'];
 const MESES=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
 const ROLES={admin:'Administrador',kinesiologo:'Kinesiólogo/a',secretaria:'Secretaría'};
-const NODOS=['usuarios','pacientes','sesiones','evaluaciones','turnos','config'];
+const NODOS=['usuarios','pacientes','sesiones','evaluaciones','turnos','config','ejercicios'];
 
 /* ============ HELPERS ============ */
 const $=s=>document.querySelector(s);
@@ -151,6 +171,7 @@ function difDias(a,b){return Math.round((parseD(b)-parseD(a))/86400000);}
 function fmtF(s){if(!s)return '—';const d=parseD(s);return DIAS[d.getDay()]+' '+d.getDate()+'/'+(d.getMonth()+1)+'/'+String(d.getFullYear()).slice(2);}
 function fmtLargo(s){const d=parseD(s);return DIASL[d.getDay()]+' '+d.getDate()+' de '+MESES[d.getMonth()];}
 function edadDe(n){if(!n)return '';const d=parseD(n),h=new Date();let e=h.getFullYear()-d.getFullYear();if(h.getMonth()<d.getMonth()||(h.getMonth()===d.getMonth()&&h.getDate()<d.getDate()))e--;return e;}
+function logoDiv(){return LOGO?'<div class="logo img"><img src="'+LOGO+'" alt="Futbolistas Agremiados"></div>':'<div class="logo">FA</div>';}
 function ini(n){return String(n||'?').trim().split(/\s+/).slice(0,2).map(x=>x[0]||'').join('').toUpperCase();}
 function primerNombre(n){return String(n||'').trim().split(/\s+/)[0]||'';}
 function waLink(tel,msg){let d=String(tel||'').replace(/\D/g,'');if(!d)return '';d=d.replace(/^0+/,'');if(!d.startsWith('54'))d='549'+d.replace(/^9/,'');return 'https://wa.me/'+d+'?text='+encodeURIComponent(msg);}
@@ -161,7 +182,7 @@ function asim(i,d){const a=numOrNull(i),b=numOrNull(d);if(a===null||b===null)ret
 
 /* ============ ESTADO ============ */
 let db;
-const S={usuarios:{},pacientes:{},sesiones:{},evaluaciones:{},turnos:{},config:{},me:null,meKey:null,view:'inicio',filtro:'activo',orden:'recientes',q:'',pid:null,tab:'resumen',fecha:hoy(),soloMios:false};
+const S={usuarios:{},pacientes:{},sesiones:{},evaluaciones:{},turnos:{},config:{},ejercicios:{},me:null,meKey:null,view:'inicio',filtro:'activo',orden:'recientes',q:'',pid:null,tab:'resumen',fecha:hoy(),soloMios:false};
 const listos={};
 const R=p=>db.ref(ROOT+'/'+p);
 const rol=()=>S.me?S.me.rol:'';
@@ -215,6 +236,7 @@ function logout(forzado){
 
 /* ============ MODAL ============ */
 let modalSave=null;
+let sesPid=null,sesEditId=null;
 function modal(titulo,html,opt){
   opt=opt||{};
   $('#mTit').textContent=titulo;$('#mBody').innerHTML=html;modalSave=opt.onSave||null;
@@ -247,7 +269,7 @@ function renderSoft(){
 function renderTop(){
   const t=$('#top');
   if(S.pid&&S.pacientes[S.pid]){const p=S.pacientes[S.pid];t.innerHTML='<button class="back" onclick="volver()">‹</button><div style="flex:1;min-width:0"><h1>'+esc(p.nombre)+'</h1><small>'+esc(dxCorto(p))+'</small></div><span class="tag '+p.estado+'">'+estadoTxt(p.estado)+'</span>';}
-  else t.innerHTML='<div class="logo">FA</div><div style="flex:1"><h1>Futbolistas Agremiados</h1><small>'+esc(S.me.nombre)+' · '+ROLES[S.me.rol]+'</small></div>';
+  else t.innerHTML=logoDiv()+'<div style="flex:1"><h1>Futbolistas Agremiados</h1><small>'+esc(S.me.nombre)+' · '+ROLES[S.me.rol]+'</small></div>';
 }
 function renderNav(){
   const items=[['inicio','🏠','Inicio'],['pacientes','👥','Pacientes'],['agenda','📅','Agenda'],['mas','⚙️','Más']];
@@ -356,7 +378,7 @@ function tabSesiones(p){
     return '<div class="item" '+(puedeClin()?'onclick="formSes(\''+p.id+'\',\''+s.id+'\')"':'')+'><div class="im"><b>'+fmtF(s.fecha)+'</b><small>'+esc(nombreK(s.kinesioKey))+(ep?' · '+esc(ep.dx):'')+'</small>'+
      (tr.length?'<div class="chips">'+tr.map(t=>'<span class="chip mini">'+esc(t)+'</span>').join('')+'</div>':'')+
      ((s.evaPre!==''&&s.evaPre!=null)||(s.evaPost!==''&&s.evaPost!=null)||(s.rpe!==''&&s.rpe!=null)?'<small>'+((s.evaPre!==''&&s.evaPre!=null)?'EVA pre '+s.evaPre:'')+((s.evaPost!==''&&s.evaPost!=null)?' · post '+s.evaPost:'')+((s.rpe!==''&&s.rpe!=null)?' · RPE '+s.rpe:'')+'</small>':'')+
-     (s.detalle?'<small style="white-space:pre-wrap">'+esc(s.detalle.length>180?s.detalle.slice(0,180)+'…':s.detalle)+'</small>':'')+'</div></div>';}).join(''):'<div class="empty">Todavía no hay sesiones registradas.</div>')+'</div>';
+     exLinesHtml(s)+(s.detalle?'<small style="white-space:pre-wrap">'+esc(s.detalle.length>180?s.detalle.slice(0,180)+'…':s.detalle)+'</small>':'')+'</div></div>';}).join(''):'<div class="empty">Todavía no hay sesiones registradas.</div>')+'</div>';
   return o;
 }
 function tabEvals(p){
@@ -446,6 +468,7 @@ function opcEps(p,sel){const eps=epsDe(p);return '<option value="">— sin episo
 
 /* ============ FORMULARIOS: SESIÓN ============ */
 function formSes(pid,sid,fechaIni){
+  sesPid=pid;sesEditId=sid||null;
   const p=S.pacientes[pid];const s=sid?S.sesiones[sid]:{};
   const tr=Array.isArray(s.trat)?s.trat:lista(s.trat);
   const epDef=s.episodioId||(epAbierto(p)||{}).id||'';
@@ -455,7 +478,10 @@ function formSes(pid,sid,fechaIni){
    (!sid&&sesDe(pid).length?'<button class="btn sec sm" style="margin-top:12px" onclick="copiarUlt(\''+pid+'\')">↺ Copiar última sesión</button>':'')+
    '<div class="row3"><div><label>EVA pre</label><input id="s_pre" inputmode="decimal" placeholder="0-10" value="'+esc(s.evaPre)+'"></div><div><label>EVA post</label><input id="s_post" inputmode="decimal" placeholder="0-10" value="'+esc(s.evaPost)+'"></div><div><label>RPE</label><input id="s_rpe" inputmode="decimal" placeholder="0-10" value="'+esc(s.rpe)+'"></div></div>'+
    '<label>Tratamiento realizado</label><div class="chips" id="s_tr">'+TRAT.concat(tr.filter(t=>TRAT.indexOf(t)<0)).map(t=>'<span class="chip'+(tr.indexOf(t)>=0?' on':'')+'" data-v="'+esc(t)+'" onclick="this.classList.toggle(\'on\')">'+esc(t)+'</span>').join('')+'</div>'+
-   '<label>Ejercicios / cargas / detalle</label><textarea id="s_det" style="min-height:120px" placeholder="Ej: Nordic 3x6, puente unipodal 3x10…">'+esc(s.detalle||'')+'</textarea>'+
+   '<label>Ejercicios</label><div id="exRows"></div>'+
+   '<select id="exPre" onchange="addExCat()"><option value="">+ Agregar ejercicio frecuente…</option>'+Object.keys(EJ).map(g=>'<optgroup label="'+esc(g)+'">'+EJ[g].map(n=>'<option>'+esc(n)+'</option>').join('')+'</optgroup>').join('')+'</select>'+
+   '<button class="btn sec sm" style="margin-top:8px" onclick="exRow()">+ Ejercicio libre</button><datalist id="exDl">'+nombresEj().map(n=>'<option value="'+esc(n)+'">').join('')+'</datalist>'+
+   '<label>Detalle adicional</label><textarea id="s_det" placeholder="Opcional: observaciones generales de la sesión…">'+esc(s.detalle||'')+'</textarea>'+
    '<label>Notas clínicas</label><textarea id="s_not">'+esc(s.notas||'')+'</textarea>'+
    '<label>Indicaciones para la próxima</label><textarea id="s_ind" style="min-height:60px">'+esc(s.indicaciones||'')+'</textarea>'+
    (sid?'<button class="btn red sm" style="margin-top:14px" onclick="borrarSes(\''+sid+'\')">Eliminar sesión</button>':''),
@@ -464,15 +490,51 @@ function formSes(pid,sid,fechaIni){
      const id=sid||R('sesiones').push().key;
      const trat=[...document.querySelectorAll('#s_tr .chip.on')].map(e=>e.dataset.v);
      const num=v=>{const n=numOrNull(v);return n===null?'':n;};
-     await R('sesiones/'+id).set({id:id,pacienteId:pid,episodioId:$('#s_ep').value,fecha:f,kinesioKey:esAdmin()?$('#s_k').value:(s.kinesioKey||S.meKey),evaPre:num($('#s_pre').value),evaPost:num($('#s_post').value),rpe:num($('#s_rpe').value),trat:trat.length?trat:'',detalle:$('#s_det').value.trim(),notas:$('#s_not').value.trim(),indicaciones:$('#s_ind').value.trim(),creado:s.creado||Date.now()});
+     const exs=[...document.querySelectorAll('#exRows .exc')].map(r=>({nombre:r.querySelector('.x_n').value.trim(),series:r.querySelector('.x_s').value.trim(),reps:r.querySelector('.x_r').value.trim(),carga:r.querySelector('.x_c').value.trim(),rir:r.querySelector('.x_i').value.trim(),obs:r.querySelector('.x_o').value.trim()})).filter(x=>x.nombre);
+     const conocidos=nombresEj().map(n=>n.toLowerCase());const nuevos={};
+     exs.forEach(x=>{if(conocidos.indexOf(x.nombre.toLowerCase())<0){const kk=R('ejercicios').push().key;nuevos[kk]={id:kk,nombre:x.nombre};conocidos.push(x.nombre.toLowerCase());}});
+     if(Object.keys(nuevos).length)await R('ejercicios').update(nuevos);
+     await R('sesiones/'+id).set({id:id,pacienteId:pid,episodioId:$('#s_ep').value,fecha:f,kinesioKey:esAdmin()?$('#s_k').value:(s.kinesioKey||S.meKey),evaPre:num($('#s_pre').value),evaPost:num($('#s_post').value),rpe:num($('#s_rpe').value),trat:trat.length?trat:'',ejercicios:exs.length?exs:'',detalle:$('#s_det').value.trim(),notas:$('#s_not').value.trim(),indicaciones:$('#s_ind').value.trim(),creado:s.creado||Date.now()});
      R('pacientes/'+pid+'/lastOpened').set(Date.now());
    }});
+  (Array.isArray(s.ejercicios)?s.ejercicios:lista(s.ejercicios)).forEach(x=>exRow(x));
+}
+
+function nombresEj(){const set={};Object.keys(EJ).forEach(g=>EJ[g].forEach(n=>{set[n.toLowerCase()]=n;}));lista(S.ejercicios).forEach(e=>{if(e&&e.nombre)set[e.nombre.toLowerCase()]=e.nombre;});return Object.values(set).sort((a,b)=>a.localeCompare(b));}
+function exRow(x){
+  x=x||{};
+  const d=document.createElement('div');d.className='exc';
+  d.innerHTML='<div class="r1"><input class="x_n" list="exDl" placeholder="Ejercicio" value="'+esc(x.nombre)+'" onchange="exHint(this)"><button class="xb" onclick="this.closest(\'.exc\').remove()">✕</button></div>'+
+   '<div class="r2"><div><span>Series</span><input class="x_s" inputmode="numeric" value="'+esc(x.series)+'"></div><div><span>Reps</span><input class="x_r" value="'+esc(x.reps)+'" placeholder="8"></div><div><span>Carga</span><input class="x_c" value="'+esc(x.carga)+'" placeholder="kg"></div><div><span>RIR/RPE</span><input class="x_i" value="'+esc(x.rir)+'"></div></div>'+
+   '<input class="x_o" style="margin-top:6px" placeholder="Nota (opcional)" value="'+esc(x.obs)+'"><div class="exh"></div>';
+  $('#exRows').appendChild(d);
+  exHint(d.querySelector('.x_n'));
+  return d;
+}
+function addExCat(){const s=$('#exPre');if(!s.value)return;const d=exRow({nombre:s.value});s.value='';const f=d.querySelector('.x_s');if(f)f.focus();}
+function exTxt(e){return [(e.series&&e.reps)?e.series+'×'+e.reps:(e.series||e.reps||''),e.carga,e.rir?'RIR '+e.rir:''].filter(Boolean).join(' · ');}
+function exHint(inp){
+  const h=inp.closest('.exc').querySelector('.exh');h.textContent='';
+  const n=inp.value.trim().toLowerCase();
+  if(!n||!sesPid)return;
+  const fi=$('#s_f'),f=fi?fi.value:'';
+  const ses=sesDe(sesPid).filter(s=>s.id!==sesEditId&&(!f||s.fecha<=f));
+  for(const s of ses){
+    const ex=(Array.isArray(s.ejercicios)?s.ejercicios:lista(s.ejercicios)).find(e=>(e.nombre||'').toLowerCase()===n);
+    if(ex){h.textContent='Última vez ('+fmtF(s.fecha)+'): '+(exTxt(ex)||'sin datos');return;}
+  }
+}
+function exLinesHtml(s){
+  const ex=Array.isArray(s.ejercicios)?s.ejercicios:lista(s.ejercicios);
+  if(!ex.length)return '';
+  return '<div style="margin-top:4px;font-size:13px">'+ex.map(e=>'<div>• <b>'+esc(e.nombre)+'</b> '+esc(exTxt(e))+(e.obs?' <span class="sub">('+esc(e.obs)+')</span>':'')+'</div>').join('')+'</div>';
 }
 function copiarUlt(pid){
   const u=sesDe(pid)[0];if(!u)return;
   const tr=Array.isArray(u.trat)?u.trat:lista(u.trat);
   document.querySelectorAll('#s_tr .chip').forEach(c=>c.classList.toggle('on',tr.indexOf(c.dataset.v)>=0));
   $('#s_det').value=u.detalle||'';
+  $('#exRows').innerHTML='';(Array.isArray(u.ejercicios)?u.ejercicios:lista(u.ejercicios)).forEach(x=>exRow(x));
 }
 async function borrarSes(sid){if(!confirm('¿Eliminar esta sesión?'))return;await R('sesiones/'+sid).remove();cerrarModal();}
 
@@ -618,6 +680,7 @@ function backup(){
 /* ============ ARRANQUE ============ */
 (function(){
   $('#ver').textContent=VERSION;
+  $('#loginLogo').outerHTML=logoDiv();
   try{initFB();}catch(e){}
   const k=localStorage.getItem('fa_sesion');
   if(k){
